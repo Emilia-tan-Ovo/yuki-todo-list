@@ -1,0 +1,145 @@
+# ==================================================
+# YuKi's TODO List
+# ==================================================
+
+
+# ==================================================
+# Java
+# ==================================================
+
+# Java 编译文件
+*.class
+
+# JVM 崩溃日志
+hs_err_pid*
+replay_pid*
+
+
+# ==================================================
+# Maven
+# ==================================================
+
+# Maven 编译和打包输出
+**/target/
+
+# Maven Release Plugin 产生的临时文件
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+release.properties
+
+# Maven 插件产生的临时文件
+dependency-reduced-pom.xml
+buildNumber.properties
+.mvn/timing.properties
+
+
+# ==================================================
+# IDE / 编辑器
+# ==================================================
+
+# Visual Studio Code 本地配置
+.vscode/
+
+# IntelliJ IDEA
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# Eclipse
+.classpath
+.project
+.settings/
+.factorypath
+.apt_generated/
+.apt_generated_tests/
+
+# IDE 编译输出
+**/bin/
+**/out/
+
+
+# ==================================================
+# Spring Boot 本地配置与敏感信息
+# ==================================================
+
+# 环境变量文件
+.env
+.env.*
+!.env.example
+
+# 本地专用配置文件
+**/application-local.properties
+**/application-local.yml
+**/application-local.yaml
+
+# 允许提交示例配置
+!**/application-local.example.properties
+!**/application-local.example.yml
+!**/application-local.example.yaml
+
+
+# ==================================================
+# 日志
+# ==================================================
+
+*.log
+logs/
+
+
+# ==================================================
+# 本地数据库文件
+# ==================================================
+
+# H2
+*.mv.db
+*.trace.db
+
+# SQLite
+*.sqlite
+*.sqlite3
+
+
+# ==================================================
+# 前端构建文件（以后使用 Vue / React 时生效）
+# ==================================================
+
+node_modules/
+dist/
+.vite/
+coverage/
+
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+
+# ==================================================
+# 操作系统文件
+# ==================================================
+
+# macOS
+.DS_Store
+
+# Windows
+Thumbs.db
+Desktop.ini
+
+
+# ==================================================
+# 临时文件
+# ==================================================
+
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+
+# ==================================================
+# AGENts.md
+# ==================================================
+
+AGENTS.md
