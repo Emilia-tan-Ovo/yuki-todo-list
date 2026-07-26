@@ -1,69 +1,86 @@
 # YuKi's TODO List 项目状态
 
+> 最后更新时间：2026-07-26
+
 ## 当前目标
 
-- 同步前期设计和环境准备的真实进度。
-- 为下一阶段 Spring Boot 后端搭建确定清晰、适合初学者的小步开发顺序。
-- 当前不创建或修改 Spring Boot 业务代码。
+- 实体层、基础 Repository 和数据库访问链路已经完成。
+- 下一阶段进入用户认证模块。
+- 当前第一步不是直接添加 Repository 查询方法，而是先梳理“用户注册”功能的 Service 业务流程。
 
 ## 当前进度
 
-- 项目开发前期的主要设计和本地数据库准备已基本完成。
-- MVP 范围、页面结构、数据库结构和 API v0.1 均已有对应文档。
-- MVP 任务状态已统一为 `TODO`（未完成）和 `DONE`（已完成）两种；“进行中”不属于当前 MVP。
-- 2026-07-24 开发日志记录：本地 MySQL 已连接，`yuki_todo` 数据库及 `users`、`courses`、`tasks` 三张表已创建并检查成功。
-- Spring Boot 后端项目、数据源配置和业务代码尚未开始。
+- 当前阶段：Spring Boot 后端基础项目、JPA 实体和基础 Repository 已完成，准备进入用户模块业务实现。
+- 已完成数据库连接、实体映射验证和一次真实 Repository 查询。
+
+## 正在进行
+
+- 正在梳理用户注册业务的完整步骤。
+- 尚未决定或添加注册所需的 Repository 条件查询。
+- Service、Controller 和正式认证接口仍未开始实现。
 
 ## 本次更新
 
-- 2026-07-25：阅读现有项目书、页面设计、数据库设计、API 文档和最近三天开发日志，更新项目状态与协作说明。
-- 2026-07-25：将项目书中的旧任务状态修正为 `TODO / DONE`，与页面、数据库和 API 设计保持一致。
+- 2026-07-26：根据 2026-07-25、2026-07-26 开发日志及 `backend/` 实际代码同步项目进度。
+- 确认临时 `CommandLineRunner` 数据库测试代码已从当前源码中删除。
+- 2026-07-26：完成 Maven 调用诊断，使用本机 Maven 绝对路径成功执行 `compile`。
+- 后端后续开发顺序调整为由具体 Service 业务需求推导 Repository 方法，最后实现 Controller。
 
 ## 完成内容
 
-- 确定项目定位、目标用户、MVP 功能范围和首版验收目标。
-- 完成登录页、注册页、首页、课程详情页及课程/任务编辑窗口的页面结构设计。
-- 完成响应式页面方向和主要页面跳转流程设计。
-- 完成 `users`、`courses`、`tasks` 三张核心表的字段、关系、约束、索引和建表 SQL 设计。
-- 安装并连接本地 MySQL；创建 `yuki_todo` 数据库和三张核心表。
-- 完成认证、课程、任务接口及认证方式、错误响应、数据隔离等 API 公共规则设计。
-- 修正页面示例等 Markdown 格式和渲染问题。
-- 修正项目书中的早期三状态设计，确认“进行中”留待后续版本考虑。
-- 明确后续代码应采用适合 Java Web 和 Spring Boot 初学者理解的小步实现方式。
+- 完成 MVP、页面、数据库和 API v0.1 设计；任务状态统一为 `TODO / DONE`。
+- 初始化 `backend/` Spring Boot 项目，当前使用 Java 21、Spring Boot 4.1.0 和 Maven。
+- 配置 Web MVC、Validation、Spring Data JPA、MySQL Driver 等基础依赖。
+- 配置 `yuki_todo` 数据源，通过 `${DB_PASSWORD}` 环境变量读取数据库密码。
+- 配置 `spring.jpa.hibernate.ddl-auto=validate`，启动时实体与现有表结构验证通过。
+- 完成 `User`、`Course`、`Task` 实体和 `TaskStatus` 枚举。
+- 建立 `Course → User`、`Task → Course` 的多对一实体关联。
+- 创建 `UserRepository`、`CourseRepository`、`TaskRepository`，均继承 `JpaRepository`。
+- 使用临时 `CommandLineRunner` 调用 `UserRepository.count()`，完成真实数据库查询测试并查询成功。
+- 数据库查询测试完成后，临时 `CommandLineRunner` 已删除。
 
 ## 修改/新增文件
 
-- 更新 `PROJECT_STATUS.md`：同步截至 2026-07-25 的实际项目进度。
-- 更新 `AGENTS.md`：修正目录用途和当前阶段，并补充初学者友好开发规则。
-- 更新 `docs/project-book.md`：将任务状态统一为 `TODO`（未完成）和 `DONE`（已完成）。
+- 本次仅更新 `PROJECT_STATUS.md`。
+- Maven 编译只更新了已被 Git 忽略的 `backend/target/` 构建产物。
+- 未修改 Java 源码、Repository、`pom.xml`、Maven Wrapper、开发日志或其他设计文档。
 
 ## 测试方式
 
-- 阅读并交叉核对项目书、页面设计、数据库设计、API 文档和 2026-07-22 至 2026-07-24 的开发日志。
-- 搜索项目书中的任务状态表述，并与页面、数据库和 API 文档交叉核对。
-- 检查当前 Git 工作区状态，确认本次不触碰现有未提交的设计文档改动。
+- 确认 `backend/mvnw.cmd`、`backend/.mvn/wrapper/` 和本机 Maven 可执行文件均存在。
+- 在 `backend/` 中依次尝试 PowerShell Wrapper 和 `cmd /c` Wrapper。
+- 使用 `D:\develop\Maven\apache-maven-3.9.16\bin\mvn.cmd compile` 执行编译。
 
 ## 测试结果
 
-- 文档内容能够支持“前期设计基本完成、后端尚未开始”的当前结论。
-- 项目书、页面设计、数据库设计和 API 文档现已统一使用 `TODO / DONE` 两种任务状态。
-- 未运行代码测试。
-- 本次未重新连接 MySQL；数据库和三张表已创建成功的结论来自 2026-07-24 开发日志中的检查记录。
+- PowerShell 与 `cmd /c` 调用 `mvnw.cmd` 均在启动 Maven 前失败，错误为 `Cannot index into a null array`。
+- 原因定位到 Wrapper 脚本读取普通 `.m2` 目录的空 `Target` 属性后访问 `[0]`，不是项目 Java 代码的编译错误。
+- 未永久修改 PATH，改用本机 Maven 绝对路径完成编译。
+- Maven 编译结果：`BUILD SUCCESS`，使用 Java 21 编译 8 个源文件，未发现编译错误。
+- 本次只执行 `compile`，未运行测试或重新验证数据库连接。
 
 ## 当前问题
 
-- Spring Boot、Java 和 Maven 的具体版本及首批依赖尚未确认。
-- Spring Boot 项目骨架、MySQL 数据源配置、实体映射、Repository、Service、Controller 和测试均未开始。
-- 认证、课程、任务和首页摘要接口均尚未实现。
-- 用户数据隔离、密码哈希、Session 登录状态和统一异常响应尚未通过代码验证。
-- API v0.1 是实现依据，但仍需在逐条开发时校验请求字段、状态码和 JSON 示例。
+- 三个 Repository 目前只有 `JpaRepository` 提供的基础方法，注册、登录所需的条件查询尚未定义。
+- 用户模块 Service、请求/响应对象、Controller 和认证流程尚未实现。
+- 数据库设计将 `password_hash` 定义为 `VARCHAR(255)`，当前 `User` 实体使用 `@Column(length = 100)`，两处长度不一致，待确认后再单独处理。
+- Session、密码哈希、统一异常响应和用户数据隔离尚未通过业务代码验证。
+- 当前环境中的 `mvnw.cmd` 仍存在上述启动问题；在不修改 Wrapper 的前提下，可使用 Maven 绝对路径执行构建。
+
+## 后端开发原则
+
+- 先从 Service 业务入手。
+- 再分析需要访问的数据。
+- 最后决定 Repository 方法。
+- 不提前批量添加尚未被当前业务使用的查询。
+- Controller 放在 Service 业务明确以后实现。
 
 ## 下一步
 
-- 第一个小任务：确认 Java、Spring Boot、Maven 版本以及首批必要依赖，只确定技术栈和项目初始化范围。
-- 第二个小任务：创建最小 Spring Boot 项目骨架，仅验证应用能够启动。
-- 第三个小任务：配置本地 MySQL 数据源，仅验证应用能够连接 `yuki_todo`。
-- 第四个小任务：按 `User → Course → Task` 顺序建立实体映射和 Repository，并逐个验证数据库访问。
-- 第五个小任务：建立统一错误响应和参数校验的最小基础。
-- 第六个小任务：从用户注册开始，逐条完成认证流程，再实现课程接口、任务接口和首页课程摘要查询。
-- 每完成一条接口，单独验证 Controller → Service → Repository → MySQL 的完整调用流程和用户数据隔离。
+1. 阅读 API 设计和数据库设计中与用户注册有关的内容。
+2. 用中文整理用户注册的完整业务流程。
+3. 标出流程中需要访问数据库的步骤。
+4. 根据这些步骤，推导 `UserRepository` 当前真正需要的方法。
+5. 经学习确认后，再实现用户注册 Service。
+6. 最后实现注册 Controller 和接口测试。
+7. 注册流程完整跑通后，再使用相同方式实现登录。
