@@ -129,6 +129,13 @@ POST /api/auth/login
 
 ```json
 {
+  "code": "PASSWORD_MISMATCH",
+  "message": "两次输入的密码不一致"
+}
+```
+
+```json
+{
   "code": "ACCOUNT_ALREADY_EXISTS",
   "message": "用户名或邮箱已被使用"
 }
