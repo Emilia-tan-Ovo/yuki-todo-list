@@ -256,7 +256,7 @@ POST /api/auth/login
 
 ```json
 {
-  "name": "JavaWeb",
+  "name": "JavaWeb"
 }
 ```
 #### 成功响应

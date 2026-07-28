@@ -1,15 +1,17 @@
 package com.emiliaovo.yukitodo.service;
 
-import com.emiliaovo.yukitodo.dto.auth.RegisterRequest;
-import com.emiliaovo.yukitodo.dto.auth.RegisterResponse;
+import com.emiliaovo.yukitodo.dto.auth.*;
 import com.emiliaovo.yukitodo.entity.User;
 import com.emiliaovo.yukitodo.exception.AccountAlreadyExistsException;
+import com.emiliaovo.yukitodo.exception.InvalidCredentialsException;
 import com.emiliaovo.yukitodo.exception.PasswordMismatchException;
+import com.emiliaovo.yukitodo.exception.UnauthorizedException;
 import com.emiliaovo.yukitodo.repository.UserRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.Objects;
+import java.util.Optional;
 
 @Service
 public class AuthService {
@@ -52,6 +54,52 @@ public class AuthService {
         response.setId(savedUser.getId());
         response.setUsername(savedUser.getUsername());
         response.setEmail(savedUser.getEmail());
+        return response;
+    }
+
+    /**
+     * 完成用户登录流程：检查账号和密码，返回用户信息。
+     */
+    public LoginResponse login(LoginRequest request) {
+        // 根据账号（用户名或邮箱）查找用户，未找到则抛出凭证无效异常
+        User user = userRepository
+                .findByUsernameOrEmail(
+                        request.getAccount(),
+                        request.getAccount()
+                )
+                .orElseThrow(InvalidCredentialsException::new);
+
+        // 校验用户输入的密码是否与数据库中存储的哈希值匹配
+        boolean passwordMatches = passwordEncoder.matches(
+                request.getPassword(),
+                user.getPasswordHash()
+        );
+
+        if (!passwordMatches) {
+            throw new InvalidCredentialsException();
+        }
+
+        // 认证通过，组装登录响应并返回用户基本信息
+        LoginResponse response = new LoginResponse();
+        response.setId(user.getId());
+        response.setUsername(user.getUsername());
+        response.setEmail(user.getEmail());
+
+        return response;
+    }
+
+    /**
+     * 查询当前登录用户。
+     */
+    public CurrentUserResponse getCurrentUser(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(UnauthorizedException::new);
+
+        CurrentUserResponse response = new CurrentUserResponse();
+        response.setId(user.getId());
+        response.setUsername(user.getUsername());
+        response.setEmail(user.getEmail());
+
         return response;
     }
 }

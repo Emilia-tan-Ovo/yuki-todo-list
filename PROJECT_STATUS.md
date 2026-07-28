@@ -1,89 +1,102 @@
 # YuKi's TODO List 项目状态
 
-> 最后更新时间：2026-07-27
+> 最后更新时间：2026-07-28
 
 ## 当前目标
 
-- 用户注册功能已完成并通过一次真实 HTTP 请求测试。
-- 下一阶段先补测注册失败场景。
-- 完成后按照业务驱动流程开始用户登录功能。
+- 认证模块四个接口已经完成，并通过用户使用 Apifox 执行的成功与失败场景测试。
+- 创建课程接口已经完成，并通过用户使用 Apifox 执行的成功、失败和边界场景测试。
+- 下一阶段进入课程查询接口，首先分析 `GET /api/courses` 的业务流程。
 
 ## 当前进度
 
-- 当前阶段：用户注册的 Controller → Service → Repository → MySQL → Session 完整链路已实现。
-- `AuthService.register()`、注册 DTO、请求校验、BCrypt 密码编码和注册所需 Repository 方法已完成。
-- `PasswordMismatchException`、`AccountAlreadyExistsException`、`ErrorResponse` 和 `GlobalExceptionHandler` 已完成。
-- `AuthController` 已提供 `POST /api/auth/register`，注册成功写入 Session 并返回 `201 Created`。
-- 2026-07-27 用户使用 Apifox 完成一次真实注册测试，并将注册请求保存为正式接口。
+- 已完成 `POST /api/auth/register` 用户注册。
+- 已完成 `POST /api/auth/login` 用户登录，支持使用用户名或邮箱登录。
+- 已完成 `POST /api/auth/logout` 用户登出。
+- 已完成 `GET /api/auth/me` 查询当前用户。
+- 已完成 `POST /api/courses` 创建课程。
+- 注册和登录成功后使用 Session 属性 `"userId"` 保存当前用户 id；需要登录的接口可据此识别当前用户。
+- `ErrorResponse` 和 `GlobalExceptionHandler` 已统一处理认证及创建课程接口的参数校验和业务异常。
+- 创建课程时，所属用户由后端根据 Session 中的 `userId` 查询并设置，请求 DTO 不包含 `userId`。
+- 课程名称在查重和保存前执行 `trim()`，同一用户范围内使用忽略大小写的方式查重。
+- 创建课程未提交 `color` 或提交 `null` 时，后端从 8 个预设颜色中随机选择；合法的前端颜色会被保留。
+- 创建课程成功返回只包含 `id`、`name`、`color` 的响应 DTO，不直接暴露 `Course` 实体。
+- 指定 Maven 命令已成功编译 27 个 Java 源文件，Java release 为 21，无警告或错误。
 
 ## 正在进行
 
-- 已完成注册代码与 API 设计的一致性核对。
-- 正在补充用户注册失败场景测试。
+- 认证模块和创建课程接口的代码实现、编译及用户手动测试均已完成。
+- 正在准备分析课程列表接口 `GET /api/courses`，尚未实现课程查询代码。
 
 ## 本次更新
 
-- 2026-07-26：根据 2026-07-25、2026-07-26 开发日志及 `backend/` 实际代码同步项目进度。
-- 确认临时 `CommandLineRunner` 数据库测试代码已从当前源码中删除。
-- 2026-07-26：完成 Maven 调用诊断，使用本机 Maven 绝对路径成功执行 `compile`。
-- 后端后续开发顺序调整为由具体 Service 业务需求推导 Repository 方法，最后实现 Controller。
-- 2026-07-27：完成 `AuthService.register()`、注册异常处理、请求校验、`AuthController` 和 Session 建立。
-- 2026-07-27：Apifox 注册请求返回 `201 Created`，响应包含 id、username、email，并保存了 Session Cookie。
-- 本次收尾检查确认当前注册主链路与 API 设计一致。
+- 根据 `backend/src/main/java` 实际源码重新核对认证模块和创建课程完整链路。
+- 根据用户已经完成的 Apifox 测试，同步四个认证接口及创建课程接口的成功、失败和边界场景结果。
+- 将下一阶段目标调整为课程查询接口。
+- 本次只整理项目状态，没有修改或新增后端业务代码。
 
 ## 完成内容
 
+### 项目基础
+
 - 完成 MVP、页面、数据库和 API v0.1 设计；任务状态统一为 `TODO / DONE`。
-- 初始化 `backend/` Spring Boot 项目，当前使用 Java 21、Spring Boot 4.1.0 和 Maven。
-- 配置 Web MVC、Validation、Spring Data JPA、MySQL Driver 等基础依赖。
+- 初始化 `backend/` Spring Boot 项目，使用 Java 21、Spring Boot 4.1.0 和 Maven。
+- 配置 Web MVC、Validation、Spring Data JPA、MySQL Driver 和 BCrypt 密码编码。
 - 配置 `yuki_todo` 数据源，通过 `${DB_PASSWORD}` 环境变量读取数据库密码。
-- 配置 `spring.jpa.hibernate.ddl-auto=validate`，启动时实体与现有表结构验证通过。
+- 配置 `spring.jpa.hibernate.ddl-auto=validate`，实体与现有数据库表结构验证通过。
 - 完成 `User`、`Course`、`Task` 实体和 `TaskStatus` 枚举。
-- 建立 `Course → User`、`Task → Course` 的多对一实体关联。
-- 创建 `UserRepository`、`CourseRepository`、`TaskRepository`，均继承 `JpaRepository`。
-- 使用临时 `CommandLineRunner` 调用 `UserRepository.count()`，完成真实数据库查询测试并查询成功。
-- 数据库查询测试完成后，临时 `CommandLineRunner` 已删除。
-- `UserRepository` 已提供注册当前需要的 `existsByUsername`、`existsByEmail` 和继承自 `JpaRepository` 的 `save`。
-- 已配置 BCrypt `PasswordEncoder` Bean，并在 `AuthService` 中通过构造器注入。
-- 完成 `AuthService.register()`，返回值只包含用户 id、用户名和邮箱。
-- `User.passwordHash` 映射长度现为 255，与数据库设计一致。
-- `RegisterRequest` 已使用 `@NotBlank`、`@Email`、`@Size` 定义字段校验，并由 Controller 的 `@Valid` 触发。
-- 密码不一致映射为 `400 Bad Request`；用户名或邮箱重复映射为 `409 Conflict`。
-- 参数校验失败通过 `GlobalExceptionHandler` 返回统一的 `ErrorResponse`。
-- 注册成功后 Session 使用属性名 `userId` 保存新用户 id。
-- 当前源码未发现 `UserService` 的导包、变量名或引用残留。
+- 完成 `UserRepository`、`CourseRepository`、`TaskRepository` 基础数据访问层。
+- 曾使用 `UserRepository.count()` 完成真实数据库访问链路测试；临时 `CommandLineRunner` 已删除。
+
+### 认证模块
+
+- `AuthController` 已提供注册、登录、登出和查询当前用户四个接口。
+- `AuthService` 已完成注册、登录和查询当前用户业务。
+- 已完成注册、登录和当前用户响应 DTO，以及请求字段校验。
+- 注册使用 BCrypt 保存密码哈希；接口不返回明文密码或 `passwordHash`。
+- 登录账号或密码错误统一返回 `401 INVALID_CREDENTIALS`。
+- 未登录、重复登出或 Session 失效统一返回 `401 UNAUTHORIZED`。
+- 注册、登录成功建立 Session；登出成功使 Session 失效并返回 `204 No Content`。
+
+### 创建课程
+
+- `CourseController` 已提供 `POST /api/courses`，并使用 `@Valid` 校验请求 DTO。
+- `CourseService` 已完成查询当前用户、名称规范化、同名检查、颜色选择、实体保存和响应转换。
+- `CourseRepository` 已提供 `existsByUser_IdAndNameIgnoreCase(Long userId, String name)`。
+- `CourseAlreadyExistsException` 已映射为 `409 Conflict`，错误码为 `COURSE_ALREADY_EXISTS`，消息为“课程名称已存在”。
+- 创建课程的前端请求不能提交或决定课程所属用户。
+- 不同用户可以创建同名课程，同一用户不能创建忽略大小写后同名的课程。
 
 ## 修改/新增文件
 
-- 本次仅更新 `PROJECT_STATUS.md`。
-- Maven 编译只更新了已被 Git 忽略的 `backend/target/` 构建产物。
-- 未修改 Java 源码、`pom.xml`、数据库、API 文档、开发日志、Maven Wrapper 或其他项目文件。
+- 本次仅修改 `PROJECT_STATUS.md`。
+- 未修改 Java 源码、`pom.xml`、数据库结构、API 设计文档、开发日志、Maven Wrapper、`AGENTS.md` 或其他项目文件。
 
 ## 测试方式
 
-- 使用 `D:\develop\Maven\apache-maven-3.9.16\bin\mvn.cmd compile` 执行编译。
-- 逐个检查注册 Controller、Service、DTO、Repository、实体、密码配置、业务异常和全局异常处理。
-- 对照 API 文档核对路径、状态码、响应字段、Session 和错误响应。
-- 根据 2026-07-27 日志记录用户已经完成的 Apifox 外部测试。
+- 编译记录来自创建课程实现完成后执行的：
+  `D:\develop\Maven\apache-maven-3.9.16\bin\mvn.cmd compile`
+- 接口结果来自用户使用 Apifox 完成的认证模块和创建课程手动测试。
+- 本次状态同步通过只读检查 Controller、Service、DTO、Repository、实体、异常和全局异常处理核对实现。
+- 本次 Codex 未启动后端，也未重新执行 Apifox 接口测试。
 
 ## 测试结果
 
-- Maven 编译结果：`BUILD SUCCESS`。
-- 本次 Maven 判断全部 class 已是最新，重新编译源文件数为 0；当前主源码目录共有 17 个 Java 文件。
-- 编译过程没有警告或错误。
-- 用户在 2026-07-27 使用 Apifox 实测注册成功：返回 `201 Created`，响应包含 id、username、email，并收到 Session Cookie。
-- 本次 Codex 未启动后端，也未重新执行接口测试。
-- 当前响应和日志代码未发现返回或记录明文密码、`passwordHash` 的情况。
+- Maven：`BUILD SUCCESS`，编译 27 个 Java 源文件，Java release 21，无警告和错误。
+- 注册、登录、登出和查询当前用户的成功与失败场景均已通过用户手动测试。
+- 创建课程的成功、未登录、参数校验、随机颜色、自定义颜色、名称 `trim()`、同用户忽略大小写查重及不同用户同名场景均已通过用户手动测试。
+- 创建课程返回的 HTTP 状态码和统一错误响应符合预期。
+- 本次 Codex 未重新执行编译或接口测试。
 
 ## 当前问题
 
-- 阻塞问题：未发现。
-- 功能问题：数据库唯一约束异常没有额外兜底处理；如果查重后并发写入发生冲突，目前可能无法转换为 API 约定的 `409 Conflict`。
-- 改进建议：密码不一致、字段校验失败、用户名或邮箱重复等注册失败场景尚未通过 Apifox 实测。
-- 改进建议：Session 属性名 `"userId"` 目前是字符串字面量，后续认证接口增多时可再统一为常量。
-- 改进建议：参数校验失败目前只返回第一条字段错误，当前 MVP 可以接受，后续可根据前端展示需要决定是否返回全部错误。
-- 改进建议：当前没有用户注册自动化测试。
-- 当前环境中的 `mvnw.cmd` 仍存在上述启动问题；在不修改 Wrapper 的前提下，可使用 Maven 绝对路径执行构建。
+- 未发现会阻塞当前已完成功能的编译或运行问题。
+- Session 属性名 `"userId"` 仍是分散使用的字符串字面量，后续可考虑统一为常量。
+- 当前接口以 Apifox 手动测试为主，尚未建立自动化测试。
+- 注册和创建课程都采用“先查询、再保存”的查重方式；数据库唯一约束冲突尚无并发兜底处理，极端并发下可能不能转换为约定的 `409 Conflict`。
+- 随机课程颜色可能连续选择到相同颜色，当前 MVP 可以接受。
+- API 文档与创建课程核心契约没有直接冲突，但尚未详细记录随机颜色池、名称 `trim()`、忽略大小写查重和 `COURSE_ALREADY_EXISTS` 错误响应。
+- 当前环境中的 `mvnw.cmd` 仍存在启动问题；可继续使用本机 Maven 绝对路径执行构建。
 
 ## 后端开发原则
 
@@ -105,10 +118,12 @@
 
 ## 下一步
 
-1. 使用 Apifox 测试两次密码不一致。
-2. 测试邮箱格式错误或必填字段为空。
-3. 测试用户名或邮箱重复。
-4. 确认错误状态码和统一响应体。
-5. 开始用中文梳理用户登录业务流程。
-6. 从登录业务推导所需 Repository 方法。
-7. 再实现登录 DTO、Service、异常处理和 Controller。
+1. 开始分析 `GET /api/courses`。
+2. 根据 API 文档梳理课程列表业务流程。
+3. 推导课程列表需要的 Repository 查询。
+4. 实现课程列表响应 DTO。
+5. 确保只返回当前登录用户的课程。
+6. 统计每门课程的 `todoCount`。
+7. 返回最近截止的最多 3 个 `TODO` 任务。
+8. 使用 Maven 编译。
+9. 使用 Apifox 测试成功、空列表、未登录和用户数据隔离。

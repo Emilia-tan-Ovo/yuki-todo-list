@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
     /*
-      处理注册时，两次输入的密码不一致
+     * 处理注册时，两次输入的密码不一致
      */
     @ExceptionHandler(PasswordMismatchException.class)
     public ResponseEntity<ErrorResponse> handlePasswordMismatch(
@@ -70,6 +70,57 @@ public class GlobalExceptionHandler {
 
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
+                .body(response);
+    }
+
+    /**
+     * 处理用户名或密码错误/账号不存在。
+     */
+    @ExceptionHandler(InvalidCredentialsException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidCredentials(
+            InvalidCredentialsException exception
+    ) {
+        ErrorResponse response = new ErrorResponse(
+                "INVALID_CREDENTIALS",
+                exception.getMessage()
+        );
+
+        return ResponseEntity
+                .status(HttpStatus.UNAUTHORIZED)
+                .body(response);
+    }
+
+    /**
+     * 处理用户未登录。
+     */
+    @ExceptionHandler(UnauthorizedException.class)
+    public ResponseEntity<ErrorResponse> handleUnauthorized(
+            UnauthorizedException exception
+    ) {
+        ErrorResponse response = new ErrorResponse(
+                "UNAUTHORIZED",
+                exception.getMessage()
+        );
+
+        return ResponseEntity
+                .status(HttpStatus.UNAUTHORIZED)
+                .body(response);
+    }
+
+    /**
+     * 处理当前用户创建同名课程。
+     */
+    @ExceptionHandler(CourseAlreadyExistsException.class)
+    public ResponseEntity<ErrorResponse> handleCourseAlreadyExists(
+            CourseAlreadyExistsException exception
+    ) {
+        ErrorResponse response = new ErrorResponse(
+                "COURSE_ALREADY_EXISTS",
+                exception.getMessage()
+        );
+
+        return ResponseEntity
+                .status(HttpStatus.CONFLICT)
                 .body(response);
     }
 }
