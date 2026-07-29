@@ -313,9 +313,10 @@ POST /api/auth/login
 
 说明：
 
+- 课程按照创建时间 `createdAt ASC` 排列，创建时间越早，列表位置越靠前；
 - `todoCount`：该课程的未完成任务数量；
 - `nearestTasks`：最近截止的最多 3 个 `TODO` 任务；
-- 没有未完成任务时，`nearestTasks` 返回 `[]`
+- 没有未完成任务时，`nearestTasks` 返回 `[]`。
 
 ### 查询单门课程
 

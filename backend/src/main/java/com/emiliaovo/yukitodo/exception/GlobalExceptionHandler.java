@@ -123,4 +123,21 @@ public class GlobalExceptionHandler {
                 .status(HttpStatus.CONFLICT)
                 .body(response);
     }
+
+    /**
+     * 处理课程不存在或不属于当前用户。
+     */
+    @ExceptionHandler(CourseNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleCourseNotFound(
+            CourseNotFoundException exception
+    ) {
+        ErrorResponse response = new ErrorResponse(
+                "COURSE_NOT_FOUND",
+                exception.getMessage()
+        );
+
+        return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .body(response);
+    }
 }
