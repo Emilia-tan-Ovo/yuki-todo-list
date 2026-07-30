@@ -1,6 +1,7 @@
 package com.emiliaovo.yukitodo.exception;
 
 import com.emiliaovo.yukitodo.dto.common.ErrorResponse;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
@@ -74,6 +75,23 @@ public class GlobalExceptionHandler {
     }
 
     /**
+     * 处理 JSON 格式错误或日期等字段无法转换的请求。
+     */
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<ErrorResponse> handleMessageNotReadable(
+            HttpMessageNotReadableException exception
+    ) {
+        ErrorResponse response = new ErrorResponse(
+                "VALIDATION_ERROR",
+                "请求参数格式错误"
+        );
+
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(response);
+    }
+
+    /**
      * 处理用户名或密码错误/账号不存在。
      */
     @ExceptionHandler(InvalidCredentialsException.class)
@@ -133,6 +151,23 @@ public class GlobalExceptionHandler {
     ) {
         ErrorResponse response = new ErrorResponse(
                 "COURSE_NOT_FOUND",
+                exception.getMessage()
+        );
+
+        return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .body(response);
+    }
+
+    /**
+     * 处理任务不存在或不属于当前用户。
+     */
+    @ExceptionHandler(TaskNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleTaskNotFound(
+            TaskNotFoundException exception
+    ) {
+        ErrorResponse response = new ErrorResponse(
+                "TASK_NOT_FOUND",
                 exception.getMessage()
         );
 

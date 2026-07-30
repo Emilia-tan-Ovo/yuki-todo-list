@@ -1,12 +1,13 @@
 # YuKi's TODO List 项目状态
 
-> 最后更新时间：2026-07-29
+> 最后更新时间：2026-07-30
 
 ## 当前目标
 
 - 认证模块四个接口已经完成，并通过 Apifox 成功与失败场景测试。
 - 课程模块五个接口已经全部完成，并通过 Maven 编译和真实 HTTP 请求测试。
-- 下一阶段进入任务模块，先分析 API 文档中的第一个任务接口 `POST /api/tasks`。
+- 任务模块六个接口已经全部实现，并已建立 MockMvc 集成测试。
+- 下一步由用户使用 Apifox 按完整业务链路进行一次串联验证；该轮测试尚未开始。
 
 ## 当前进度
 
@@ -38,22 +39,41 @@
 - 修改课程会对名称执行 `trim()`，忽略大小写查重并排除当前课程自身。
 - 删除课程前会校验课程归属，关联任务由数据库外键 `ON DELETE CASCADE` 删除。
 
+### 任务模块
+
+- `POST /api/tasks` 创建任务：已完成。
+- `GET /api/courses/{courseId}/tasks` 查询课程任务列表：已完成。
+- `GET /api/tasks/{taskId}` 查询任务详情：已完成。
+- `PUT /api/tasks/{taskId}` 完整修改任务：已完成。
+- `PATCH /api/tasks/{taskId}/status` 快速切换任务状态：已完成。
+- `DELETE /api/tasks/{taskId}` 删除任务：已完成。
+- 所有接口均从已有 Session 获取当前用户，并校验用户、课程或任务归属。
+- 创建任务时标题会执行 `trim()`，状态固定为 `TODO`。
+- 课程任务列表支持按 `TODO` 或 `DONE` 筛选，并按照 `deadline ASC` 排序。
+- 修改任务支持更新 `title`、`courseId`、`deadline` 和 `status`，目标课程必须属于当前用户。
+- 任务不存在或属于其他用户时统一返回 `404 TASK_NOT_FOUND`，避免泄露其他用户数据。
+- 任务接口使用响应 DTO，不直接返回实体。
+
+### 自动化测试
+
+- 已加入 `spring-boot-starter-test` 测试依赖。
+- 已建立连接独立数据库 `yuki_todo_test` 的测试配置。
+- `TaskQueryIntegrationTest` 覆盖任务列表和任务详情，共 9 个测试。
+- `TaskCommandIntegrationTest` 覆盖修改任务、切换状态和删除任务，共 14 个测试。
+- 两组 MockMvc 集成测试共 23 个用例已经通过。
+
 ## 正在进行
 
-- 课程模块五个接口的代码、编译、真实 HTTP 测试和数据库对照均已完成。
-- 正在准备分析 `POST /api/tasks` 创建任务业务流程，尚未编写任务接口代码。
+- 认证、课程和任务模块的当前 MVP 接口均已实现。
+- 准备使用 Apifox 按完整业务顺序进行一次串联测试。
+- 本轮 Apifox 全流程测试尚未执行，不能记录为已完成。
 
 ## 本次更新
 
-- 确认 `PUT /api/courses/{courseId}` 和 `DELETE /api/courses/{courseId}` 已实现。
-- 两个接口完成后 Maven 编译 34 个 Java 源文件并 `BUILD SUCCESS`。
-- PUT 的名称 `trim()`、排除当前课程自身的忽略大小写查重、完整参数校验、`404` 和 `409` 均验证正常。
-- DELETE 的 `204 No Content`、用户数据隔离和数据库 `ON DELETE CASCADE` 均验证正常。
-- 两个接口的真实 HTTP 测试全部通过。
-- 临时用户、课程和任务已全部清理，原有数据未删除；测试后端已停止，8080 端口已释放。
-- 本轮状态同步未重新编译或执行接口测试。
-- 课程模块五个接口全部完成，下一阶段进入任务模块。
-- 根据 API 文档，将下一步确定为分析 `POST /api/tasks`。
+- 同步任务模块六个接口的实际实现进度。
+- 同步两组 MockMvc 集成测试及共 23 个通过用例。
+- 将下一步明确为用户使用 Apifox 执行完整业务链路测试。
+- 本次只整理项目状态，未修改业务源码，也未重新编译或执行接口测试。
 
 ## 完成内容
 
@@ -118,24 +138,32 @@
 - 删除成功返回 `204 No Content`。
 - `tasks.course_id` 外键已确认包含 `ON DELETE CASCADE`，删除课程时由数据库级联删除关联任务。
 
+### 任务功能
+
+- 完成创建任务、课程任务列表、任务详情、完整修改任务、快速切换状态和删除任务。
+- `TaskService` 负责确认 Session 用户有效、校验课程或任务归属、执行业务判断并组装响应 DTO。
+- `TaskRepository` 已提供任务列表排序查询及按任务 id 和当前用户校验归属所需的数据访问方法。
+- 请求字段校验和无法解析的请求格式统一返回 `400 VALIDATION_ERROR`。
+- 未登录或 Session 用户失效返回 `401 UNAUTHORIZED`。
+- 课程不存在或不属于当前用户返回 `404 COURSE_NOT_FOUND`。
+- 任务不存在或不属于当前用户返回 `404 TASK_NOT_FOUND`。
+
 ## 修改/新增文件
 
-- 查询单门课程实现新增：
-  - `CourseDetailResponse.java`
-  - `CourseNotFoundException.java`
-- 查询单门课程实现修改：
-  - `CourseController.java`
-  - `CourseService.java`
-  - `CourseRepository.java`
-  - `GlobalExceptionHandler.java`
-- 修改和删除课程实现新增：
-  - `UpdateCourseRequest.java`
-  - `UpdateCourseResponse.java`
-- 修改和删除课程实现修改：
-  - `CourseController.java`
-  - `CourseService.java`
-  - `CourseRepository.java`
-- 本轮状态同步仅修改 `PROJECT_STATUS.md`，未修改源码、API 文档、开发日志、数据库或配置文件。
+- 任务模块实现涉及：
+  - `backend/src/main/java/com/yuki/todolist/controller/TaskController.java`
+  - `backend/src/main/java/com/yuki/todolist/controller/CourseTaskController.java`
+  - `backend/src/main/java/com/yuki/todolist/service/TaskService.java`
+  - `backend/src/main/java/com/yuki/todolist/repository/TaskRepository.java`
+  - `backend/src/main/java/com/yuki/todolist/dto/task/`
+  - `backend/src/main/java/com/yuki/todolist/exception/TaskNotFoundException.java`
+  - `backend/src/main/java/com/yuki/todolist/exception/GlobalExceptionHandler.java`
+- MockMvc 测试基础涉及：
+  - `backend/pom.xml`
+  - `backend/src/test/resources/application-test.properties`
+  - `backend/src/test/java/com/yuki/todolist/TaskQueryIntegrationTest.java`
+  - `backend/src/test/java/com/yuki/todolist/TaskCommandIntegrationTest.java`
+- 本轮状态同步仅修改 `PROJECT_STATUS.md`。
 
 ## 测试方式
 
@@ -149,6 +177,8 @@
 - HTTP 请求使用 PowerShell `Invoke-WebRequest` 和 `WebRequestSession`。
 - 用户使用 Apifox 对关键接口进行了抽查。
 - 本轮状态同步未重新执行上述测试。
+- 任务模块使用 MockMvc 和 `MockHttpSession` 执行集成测试，不需要启动真实后端。
+- 测试配置只连接独立数据库 `yuki_todo_test`。
 
 ## 测试结果
 
@@ -198,12 +228,17 @@
   - 删除带任务课程后，关联任务通过 `ON DELETE CASCADE` 被删除
   - 其他用户的课程和任务不受影响
 - PUT/DELETE 测试临时数据已全部清理，数据库残留数量为 `0/0/0`。
+- 任务模块最新 Maven 编译结果为 `BUILD SUCCESS`，使用 Java release 21，编译 47 个 Java 源文件。
+- `TaskQueryIntegrationTest`：9 个测试通过，0 失败，0 错误。
+- `TaskCommandIntegrationTest`：14 个测试通过，0 失败，0 错误。
+- 任务模块两组 MockMvc 集成测试合计 23 个用例通过。
+- 本轮没有重新执行 Maven、MockMvc、真实 HTTP 或 Apifox 测试。
 
 ## 当前问题
 
 - 未发现会阻塞当前已完成接口的编译、启动或运行问题。
 - Session 属性名 `"userId"` 仍在多个 Controller 中以字符串字面量出现，后续可考虑提取为常量。
-- 当前项目尚未提交可重复执行的自动化测试代码；本次 Codex 测试是临时执行的真实 HTTP 测试。
+- 自动化测试目前集中在任务模块，认证和课程模块尚未形成同等覆盖范围的 MockMvc 测试。
 - `GET /api/courses` 当前需要 2 次基础查询，并为每门课程执行 2 次任务查询，总体为 `2 + 2N` 次数据库查询；MVP 阶段可以接受，后续可使用批量查询或聚合查询优化。
 - `users` 和 `courses` 已有数据库唯一约束，但注册和创建课程仍采用“先查询、再保存”；极端并发冲突发生时，尚未将数据库唯一约束异常兜底转换为约定的 `409 Conflict`。
 - 当前环境中的 Maven Wrapper 仍不可用，继续使用本机 Maven 绝对路径构建。
@@ -229,18 +264,20 @@
 
 ## 下一步
 
-下一个尚未实现的接口是：
+1. 启动后端，并在 Apifox 中保持同一用户的 Session。
+2. 按以下顺序执行完整业务链路：
 
 ```text
-POST /api/tasks
+注册 / 登录
+→ 创建课程
+→ 创建任务
+→ 查询任务
+→ 修改任务
+→ 切换状态
+→ 删除任务
+→ 删除课程
 ```
 
-下一次只分析该接口：
-
-1. 阅读 API 文档中的创建任务契约。
-2. 用中文梳理创建任务的完整业务流程。
-3. 明确请求和响应 DTO 字段及校验规则。
-4. 标出确认 Session 用户、查询课程归属和保存任务所需的数据库操作。
-5. 推导当前功能真正需要新增或复用的 Repository 方法。
-6. 明确课程不存在或不属于当前用户时的 `404 COURSE_NOT_FOUND`。
-7. 方案确认后再实现代码、编译并按照接口测试规则执行测试。
+3. 逐步确认状态码、响应字段、Session、任务状态变化和用户数据隔离。
+4. 确认删除任务及删除课程后的数据库结果符合预期。
+5. 测试完成后，根据实际结果更新项目状态和开发日志。
