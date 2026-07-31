@@ -75,19 +75,19 @@ h1 {
   font-weight: 600;
 }
 
-.login-form {
+.auth-form {
   display: grid;
   gap: 10px;
   margin-top: 28px;
 }
 
-.login-form label {
+.auth-form label {
   margin-top: 8px;
   color: #364158;
   font-weight: 600;
 }
 
-.login-form input {
+.auth-form input {
   width: 100%;
   padding: 12px 14px;
   border: 1px solid #cfd5e2;
@@ -95,12 +95,12 @@ h1 {
   outline: none;
 }
 
-.login-form input:focus {
+.auth-form input:focus {
   border-color: #6573df;
   box-shadow: 0 0 0 3px rgba(101, 115, 223, 0.15);
 }
 
-.login-form button {
+.auth-form button {
   margin-top: 14px;
   padding: 13px 18px;
   border-radius: 10px;
@@ -110,13 +110,46 @@ h1 {
   font-weight: 700;
 }
 
-.login-form button:hover:not(:disabled) {
+.auth-form button:hover:not(:disabled) {
   background: #4957c7;
 }
 
-.login-form button:disabled {
+.auth-form button:disabled,
+.logout-button:disabled {
   cursor: not-allowed;
   opacity: 0.65;
+}
+
+.auth-switch {
+  margin: 24px 0 0;
+  color: #68738a;
+  text-align: center;
+}
+
+.text-link {
+  color: #4f5dca;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.text-link:hover {
+  text-decoration: underline;
+}
+
+.logout-button {
+  margin-top: 24px;
+  padding: 11px 16px;
+  border: 1px solid #cfd5e2;
+  border-radius: 10px;
+  color: #3f4a61;
+  background: #ffffff;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.logout-button:hover:not(:disabled) {
+  border-color: #aeb6c7;
+  background: #f7f8fc;
 }
 
 .error-message {

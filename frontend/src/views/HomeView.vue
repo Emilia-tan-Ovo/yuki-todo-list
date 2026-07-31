@@ -1,13 +1,15 @@
 <script setup>
 import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { getCurrentUser } from '../api/auth'
+import { getCurrentUser, logout } from '../api/auth'
 
 const router = useRouter()
 
 const currentUser = ref(null)
 const isLoading = ref(true)
 const errorMessage = ref('')
+const logoutErrorMessage = ref('')
+const isLoggingOut = ref(false)
 
 onMounted(async () => {
   try {
@@ -24,6 +26,22 @@ onMounted(async () => {
     isLoading.value = false
   }
 })
+
+async function handleLogout() {
+  logoutErrorMessage.value = ''
+  isLoggingOut.value = true
+
+  try {
+    await logout()
+    await router.replace({ name: 'login' })
+  } catch (error) {
+    logoutErrorMessage.value = error.status
+      ? error.message
+      : '无法连接到服务器，请确认后端已启动。'
+  } finally {
+    isLoggingOut.value = false
+  }
+}
 </script>
 
 <template>
@@ -39,6 +57,14 @@ onMounted(async () => {
       <template v-else-if="currentUser">
         <p class="welcome-text">你好，{{ currentUser.username }}！</p>
         <p class="helper-text">Session 验证成功。课程首页将在后续阶段实现。</p>
+
+        <p v-if="logoutErrorMessage" class="error-message" role="alert" aria-live="polite">
+          {{ logoutErrorMessage }}
+        </p>
+
+        <button class="logout-button" type="button" :disabled="isLoggingOut" @click="handleLogout">
+          {{ isLoggingOut ? '退出中...' : '退出登录' }}
+        </button>
       </template>
     </section>
   </main>

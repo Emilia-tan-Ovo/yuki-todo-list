@@ -5,7 +5,8 @@ async function requestJson(path, options = {}) {
     ...options,
   })
 
-  const data = await response.json().catch(() => null)
+  // 退出登录成功时后端返回 204，没有响应体，不需要尝试解析 JSON。
+  const data = response.status === 204 ? null : await response.json().catch(() => null)
 
   if (!response.ok) {
     const error = new Error(data?.message || '请求失败，请稍后重试。')
@@ -24,6 +25,22 @@ export function login(credentials) {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify(credentials),
+  })
+}
+
+export function register(credentials) {
+  return requestJson('/api/auth/register', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(credentials),
+  })
+}
+
+export function logout() {
+  return requestJson('/api/auth/logout', {
+    method: 'POST',
   })
 }
 

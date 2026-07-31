@@ -1,6 +1,6 @@
 <script setup>
 import { ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { RouterLink, useRouter } from 'vue-router'
 import { login } from '../api/auth'
 
 const router = useRouter()
@@ -39,7 +39,7 @@ async function handleSubmit() {
       <h1 id="login-title">登录</h1>
       <p class="helper-text">使用用户名或邮箱进入你的学习任务空间。</p>
 
-      <form class="login-form" @submit.prevent="handleSubmit">
+      <form class="auth-form" @submit.prevent="handleSubmit">
         <label for="account">用户名或邮箱</label>
         <input
           id="account"
@@ -70,6 +70,11 @@ async function handleSubmit() {
           {{ isSubmitting ? '登录中...' : '登录' }}
         </button>
       </form>
+
+      <p class="auth-switch">
+        还没有账号？
+        <RouterLink class="text-link" :to="{ name: 'register' }">前往注册</RouterLink>
+      </p>
     </section>
   </main>
 </template>
