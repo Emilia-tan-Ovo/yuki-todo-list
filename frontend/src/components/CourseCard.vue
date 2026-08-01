@@ -1,4 +1,6 @@
 <script setup>
+import { RouterLink } from 'vue-router'
+
 defineProps({
   course: {
     type: Object,
@@ -8,7 +10,12 @@ defineProps({
 </script>
 
 <template>
-  <article class="course-card" :style="{ '--course-color': course.color }">
+  <RouterLink
+    class="course-card"
+    :style="{ '--course-color': course.color }"
+    :to="{ name: 'course-detail', params: { courseId: course.id } }"
+    :aria-label="`查看课程：${course.name}`"
+  >
     <header class="course-card__header">
       <div>
         <p class="course-card__label">课程</p>
@@ -29,19 +36,26 @@ defineProps({
 
       <p v-else class="course-card__empty">暂无待办任务</p>
     </div>
-  </article>
+  </RouterLink>
 </template>
 
 <style scoped>
 .course-card {
   position: relative;
+  display: block;
   min-width: 0;
   overflow: hidden;
   padding: 24px;
   border: 1px solid #e4e8f1;
   border-radius: 16px;
+  color: inherit;
   background: #ffffff;
   box-shadow: 0 10px 28px rgba(41, 52, 78, 0.07);
+  text-decoration: none;
+  transition:
+    transform 140ms ease,
+    box-shadow 140ms ease,
+    border-color 140ms ease;
 }
 
 .course-card::before {
@@ -50,6 +64,22 @@ defineProps({
   width: 5px;
   background: var(--course-color);
   content: '';
+}
+
+.course-card:hover {
+  transform: translateY(-2px);
+  border-color: #d6dbea;
+  box-shadow: 0 16px 34px rgba(41, 52, 78, 0.11);
+}
+
+.course-card:focus-visible {
+  outline: 3px solid rgba(89, 103, 216, 0.35);
+  outline-offset: 3px;
+}
+
+.course-card:active {
+  transform: translateY(0);
+  box-shadow: 0 8px 20px rgba(41, 52, 78, 0.09);
 }
 
 .course-card__header {
