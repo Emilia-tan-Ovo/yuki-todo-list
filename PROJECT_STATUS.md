@@ -1,15 +1,13 @@
 # YuKi's TODO List 项目状态
 
-> 最后更新时间：2026-07-30
+> 最后更新时间：2026-08-01
 
 ## 当前目标
 
-- 当前阶段：后端 MVP 已完成。
-- 认证模块四个接口已经完成，并通过 Apifox 成功与失败场景测试。
-- 课程模块五个接口已经全部完成，并通过 Maven 编译和真实 HTTP 请求测试。
-- 任务模块六个接口已经全部实现，并已建立 MockMvc 集成测试。
-- 注册、课程和任务的完整业务冒烟测试已通过。
-- 下一阶段进入前端开发。
+- 当前阶段：前端课程列表查询闭环已完成，下一阶段进入课程创建或课程详情开发。
+- 后端 MVP 共 15 个接口已完成，并通过编译、自动化测试和真实业务冒烟测试。
+- Vue 3 + Vite 前端基础环境和认证闭环已完成。
+- 首页已通过当前 Session 查询并展示当前用户的课程与最近任务。
 
 ## 当前进度
 
@@ -64,17 +62,41 @@
 - `TaskCommandIntegrationTest` 覆盖修改任务、切换状态和删除任务，共 14 个测试。
 - 两组 MockMvc 集成测试共 23 个用例已经通过。
 
+## 前端进度
+
+### 前端基础环境
+
+- 已使用 Vue 3、Vite、JavaScript、Composition API 和 Vue Router 初始化 `frontend/`。
+- 已配置 Vite `/api` 代理到 `http://localhost:8080`，请求继续使用 Session + Cookie。
+- 已提取最小 Fetch 请求层，统一携带 Cookie、解析后端错误并正确处理 `204 No Content`。
+
+### 认证模块
+
+- 登录、注册、Session 验证和退出登录前端流程已完成。
+- 登录或注册成功后进入首页；Session 失效时返回登录页。
+- 认证成功、失败和退出流程已通过浏览器 Network 真实联调。
+
+### 课程列表首页
+
+- 已完成 `GET /api/courses` 前端查询闭环，只展示当前 Session 用户的数据。
+- 首页支持课程加载、请求错误、空列表和正常列表四种状态。
+- 课程通过 `v-for` 渲染，`CourseCard` 通过 `props` 接收单门课程。
+- 卡片展示课程名称、`todoCount`、最多 3 条 `nearestTasks` 及其 `deadline`。
+- 没有最近任务时显示“暂无待办任务”；当前用户信息和退出登录功能保持正常。
+- 浏览器已正确展示数据库中的课程与任务数据。
+
 ## 正在进行
 
 - 后端 MVP 接口、自动化测试和完整业务冒烟测试均已完成。
-- 正在准备进入前端开发阶段。
+- 前端认证闭环和课程列表首页查询闭环均已完成。
+- 下一步从课程创建或课程详情中选择一条小型垂直闭环继续开发。
 
 ## 本次更新
 
-- 记录 Apifox 完整业务冒烟测试已通过。
-- 将当前阶段更新为“后端 MVP 已完成”。
-- 将下一步调整为前端开发。
-- 本次只整理项目状态，未修改业务源码。
+- 同步 Vue 3 + Vite 前端基础环境、认证闭环和课程列表首页的真实进度。
+- 记录课程列表页面已通过浏览器 Network 联调，并能正确展示数据库数据。
+- 记录本轮前端 lint 和生产构建已通过。
+- 本次只更新 `PROJECT_STATUS.md`，未修改业务源码或其他文档。
 
 ## 完成内容
 
@@ -151,6 +173,13 @@
 
 ## 修改/新增文件
 
+- 前端课程列表首页实现涉及：
+  - `frontend/src/api/http.js`
+  - `frontend/src/api/courses.js`
+  - `frontend/src/api/auth.js`
+  - `frontend/src/components/CourseCard.vue`
+  - `frontend/src/views/HomeView.vue`
+  - `frontend/src/styles/global.css`
 - 任务模块实现涉及：
   - `backend/src/main/java/com/yuki/todolist/controller/TaskController.java`
   - `backend/src/main/java/com/yuki/todolist/controller/CourseTaskController.java`
@@ -168,6 +197,10 @@
 
 ## 测试方式
 
+- 前端代码质量检查：`npm.cmd run lint`。
+- 前端生产构建：`npm.cmd run build`。
+- 使用浏览器 Network 面板联调 `/api/auth/me`、`/api/courses` 和退出登录请求。
+- 使用页面展示结果对照开发数据库中的课程与任务数据。
 - Maven 编译：
   `D:\develop\Maven\apache-maven-3.9.16\bin\mvn.cmd compile`
 - Codex 使用 PowerShell `Invoke-WebRequest` 和 `WebRequestSession` 请求真实地址：
@@ -184,6 +217,10 @@
 
 ## 测试结果
 
+- 前端 ESLint：通过，0 错误。
+- 前端 Vite 生产构建：通过，Vite 8.2.0 共转换 31 个模块。
+- 浏览器 Network 联调：认证和课程列表请求成功，Session Cookie 正常携带。
+- 页面能够正确展示数据库中的课程、待办数量和最近任务数据。
 - Maven：`BUILD SUCCESS`。
 - Java release：21。
 - `GET /api/courses` 实现完成时编译 30 个 Java 源文件，无警告和编译错误。
@@ -241,6 +278,7 @@
 ## 当前问题
 
 - 未发现会阻塞当前已完成接口的编译、启动或运行问题。
+- 前端尚未实现课程创建、课程详情及课程修改和删除交互。
 - Session 属性名 `"userId"` 仍在多个 Controller 中以字符串字面量出现，后续可考虑提取为常量。
 - 自动化测试目前集中在任务模块，认证和课程模块尚未形成同等覆盖范围的 MockMvc 测试。
 - `GET /api/courses` 当前需要 2 次基础查询，并为每门课程执行 2 次任务查询，总体为 `2 + 2N` 次数据库查询；MVP 阶段可以接受，后续可使用批量查询或聚合查询优化。
@@ -268,8 +306,6 @@
 
 ## 下一步
 
-1. 阅读页面设计文档，确定前端首个实现页面及其对应接口。
-2. 确认前端技术栈、项目结构和开发环境。
-3. 初始化前端项目基础结构。
-4. 优先实现登录页面，并与现有登录接口完成联调。
-5. 登录流程跑通后，再按页面设计逐步实现课程和任务功能。
+1. 确认下一条前端垂直闭环优先实现课程创建还是课程详情。
+2. 一次只完成所选功能对应的页面、接口调用和必要状态处理。
+3. 完成后运行 lint、生产构建，并使用浏览器 Network 做真实联调。
