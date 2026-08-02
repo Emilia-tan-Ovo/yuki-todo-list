@@ -13,3 +13,13 @@ export function createTask(taskData) {
     body: JSON.stringify(taskData),
   })
 }
+
+export function updateTaskStatus(taskId, status) {
+  return requestJson(`/api/tasks/${taskId}/status`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ status }),
+  })
+}

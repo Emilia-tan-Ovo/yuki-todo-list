@@ -374,37 +374,138 @@ h1 {
 
 .course-task-list {
   display: grid;
-  gap: 0;
+  gap: 12px;
   margin: 22px 0 0;
   padding: 0;
-  border: 1px solid #e7eaf2;
-  border-radius: 14px;
   list-style: none;
 }
 
-.course-task-list li {
+.course-task-item {
+  overflow: hidden;
+  border: 1px solid #e1e5ef;
+  border-radius: 14px;
+  background: #ffffff;
+}
+
+.course-task-summary {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  width: 100%;
   gap: 24px;
   padding: 18px 20px;
+  color: inherit;
+  background: #ffffff;
+  cursor: pointer;
+  text-align: left;
 }
 
-.course-task-list li + li {
-  border-top: 1px solid #e7eaf2;
+.course-task-summary:hover:not(:disabled) {
+  background: #f8f9fc;
 }
 
-.course-task-list span {
+.course-task-summary:focus-visible {
+  position: relative;
+  z-index: 1;
+  outline: 3px solid rgba(89, 103, 216, 0.3);
+  outline-offset: -3px;
+}
+
+.course-task-summary:disabled {
+  cursor: wait;
+}
+
+.course-task-summary__main {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-width: 0;
+  flex: 1;
+  gap: 24px;
+}
+
+.course-task-summary__title {
   min-width: 0;
   overflow-wrap: anywhere;
   color: #354057;
   font-weight: 600;
 }
 
-.course-task-list time {
+.course-task-summary time {
   flex: 0 0 auto;
   color: #7a8498;
   font-size: 0.9rem;
+}
+
+.course-task-summary__hint {
+  flex: 0 0 auto;
+  color: #5967d8;
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.course-task-details {
+  padding: 20px;
+  border-top: 1px solid #e1e5ef;
+  background: #f8f9fc;
+}
+
+.course-task-details dl {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+  margin: 0;
+}
+
+.course-task-details dt {
+  color: #7a8498;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.course-task-details dd {
+  margin: 6px 0 0;
+  overflow-wrap: anywhere;
+  color: #354057;
+}
+
+.task-status-field {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 20px;
+  padding-top: 18px;
+  border-top: 1px solid #e1e5ef;
+}
+
+.task-status-field label {
+  color: #59647a;
+  font-weight: 700;
+}
+
+.task-status-field select {
+  padding: 9px 34px 9px 12px;
+  border: 1px solid #c8cede;
+  border-radius: 9px;
+  color: #354057;
+  background: #ffffff;
+  cursor: pointer;
+  font: inherit;
+}
+
+.task-status-field select:focus-visible {
+  outline: 3px solid rgba(89, 103, 216, 0.3);
+  outline-offset: 2px;
+}
+
+.task-status-field select:disabled {
+  cursor: wait;
+  opacity: 0.7;
+}
+
+.task-update-status {
+  color: #68738a;
+  font-size: 0.88rem;
 }
 
 .modal-backdrop {
@@ -591,10 +692,20 @@ h1 {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .course-task-list li {
+  .course-task-summary,
+  .course-task-summary__main {
     align-items: flex-start;
     flex-direction: column;
     gap: 8px;
+  }
+
+  .course-task-details dl {
+    grid-template-columns: 1fr;
+  }
+
+  .task-status-field {
+    align-items: flex-start;
+    flex-direction: column;
   }
 
   .modal-backdrop {

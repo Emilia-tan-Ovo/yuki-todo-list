@@ -2,7 +2,7 @@
 import { onMounted, ref } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { getCourseDetail } from '../api/courses'
-import { createTask, getCourseTasks } from '../api/tasks'
+import { createTask, getCourseTasks, updateTaskStatus } from '../api/tasks'
 
 const route = useRoute()
 const router = useRouter()
@@ -17,6 +17,9 @@ const tasks = ref([])
 const activeStatus = ref('TODO')
 const isTasksLoading = ref(true)
 const tasksErrorMessage = ref('')
+const expandedTaskId = ref(null)
+const updatingTaskId = ref(null)
+const updateTaskStatusErrorMessage = ref('')
 
 // 新建任务表单状态
 const isCreateTaskOpen = ref(false)
@@ -48,6 +51,8 @@ async function loadCourseDetail() {
 async function loadTasks(status) {
   activeStatus.value = status
   tasksErrorMessage.value = ''
+  expandedTaskId.value = null
+  updateTaskStatusErrorMessage.value = ''
   isTasksLoading.value = true
 
   try {
@@ -64,6 +69,41 @@ async function loadTasks(status) {
       : '任务列表加载失败，请确认后端已启动后重试。'
   } finally {
     isTasksLoading.value = false
+  }
+}
+
+function toggleTaskExpansion(taskId) {
+  if (updatingTaskId.value === taskId) {
+    return
+  }
+
+  updateTaskStatusErrorMessage.value = ''
+  expandedTaskId.value = expandedTaskId.value === taskId ? null : taskId
+}
+
+async function handleTaskStatusChange(taskId, newStatus) {
+  if (updatingTaskId.value !== null) {
+    return
+  }
+
+  updateTaskStatusErrorMessage.value = ''
+  updatingTaskId.value = taskId
+
+  try {
+    await updateTaskStatus(taskId, newStatus)
+    expandedTaskId.value = null
+    await Promise.all([loadCourseDetail(), loadTasks(activeStatus.value)])
+  } catch (error) {
+    if (error.status === 401) {
+      await router.replace({ name: 'login' })
+      return
+    }
+
+    updateTaskStatusErrorMessage.value = error.status
+      ? error.message
+      : '任务状态更新失败，请确认后端已启动后重试。'
+  } finally {
+    updatingTaskId.value = null
   }
 }
 
@@ -210,6 +250,10 @@ onMounted(() => {
             </button>
           </div>
 
+          <p v-if="updateTaskStatusErrorMessage" class="error-message page-message">
+            {{ updateTaskStatusErrorMessage }}
+          </p>
+
           <p v-if="isTasksLoading" class="task-list-state">正在加载任务...</p>
 
           <p v-else-if="tasksErrorMessage" class="error-message page-message">
@@ -221,9 +265,60 @@ onMounted(() => {
           </p>
 
           <ul v-else class="course-task-list">
-            <li v-for="task in tasks" :key="task.id">
-              <span>{{ task.title }}</span>
-              <time :datetime="task.deadline">{{ task.deadline }}</time>
+            <li v-for="task in tasks" :key="task.id" class="course-task-item">
+              <button
+                type="button"
+                class="course-task-summary"
+                :aria-expanded="expandedTaskId === task.id"
+                :aria-controls="`task-details-${task.id}`"
+                :disabled="updatingTaskId === task.id"
+                @click="toggleTaskExpansion(task.id)"
+              >
+                <span class="course-task-summary__main">
+                  <span class="course-task-summary__title">{{ task.title }}</span>
+                  <time :datetime="task.deadline">{{ task.deadline }}</time>
+                </span>
+                <span class="course-task-summary__hint">
+                  {{ expandedTaskId === task.id ? '收起' : '展开' }}
+                </span>
+              </button>
+
+              <div
+                v-if="expandedTaskId === task.id"
+                :id="`task-details-${task.id}`"
+                class="course-task-details"
+              >
+                <dl>
+                  <div>
+                    <dt>任务名称</dt>
+                    <dd>{{ task.title }}</dd>
+                  </div>
+                  <div>
+                    <dt>所属课程</dt>
+                    <dd>{{ course.name }}</dd>
+                  </div>
+                  <div>
+                    <dt>截止日期</dt>
+                    <dd>{{ task.deadline }}</dd>
+                  </div>
+                </dl>
+
+                <div class="task-status-field">
+                  <label :for="`task-status-${task.id}`">当前状态</label>
+                  <select
+                    :id="`task-status-${task.id}`"
+                    :value="task.status"
+                    :disabled="updatingTaskId === task.id"
+                    @change="handleTaskStatusChange(task.id, $event.target.value)"
+                  >
+                    <option value="TODO">TODO</option>
+                    <option value="DONE">DONE</option>
+                  </select>
+                  <span v-if="updatingTaskId === task.id" class="task-update-status">
+                    状态更新中...
+                  </span>
+                </div>
+              </div>
             </li>
           </ul>
         </div>
