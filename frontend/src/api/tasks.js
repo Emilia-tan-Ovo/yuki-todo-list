@@ -23,3 +23,13 @@ export function updateTaskStatus(taskId, status) {
     body: JSON.stringify({ status }),
   })
 }
+
+export function updateTask(taskId, taskData) {
+  return requestJson(`/api/tasks/${taskId}`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(taskData),
+  })
+}

@@ -469,13 +469,20 @@ h1 {
   color: #354057;
 }
 
-.task-status-field {
+.task-detail-controls {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 12px;
   margin-top: 20px;
   padding-top: 18px;
   border-top: 1px solid #e1e5ef;
+}
+
+.task-status-field {
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 
 .task-status-field label {
@@ -506,6 +513,32 @@ h1 {
 .task-update-status {
   color: #68738a;
   font-size: 0.88rem;
+}
+
+.edit-task-button {
+  flex: 0 0 auto;
+  padding: 9px 14px;
+  border: 1px solid #b9c1dc;
+  border-radius: 9px;
+  color: #4f5dca;
+  background: #ffffff;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.edit-task-button:hover:not(:disabled) {
+  border-color: #8792c7;
+  background: #f2f4ff;
+}
+
+.edit-task-button:focus-visible {
+  outline: 3px solid rgba(89, 103, 216, 0.3);
+  outline-offset: 2px;
+}
+
+.edit-task-button:disabled {
+  cursor: wait;
+  opacity: 0.7;
 }
 
 .modal-backdrop {
@@ -555,22 +588,26 @@ h1 {
   font-weight: 700;
 }
 
-.create-task-form__field input {
+.create-task-form__field input,
+.create-task-form__field select {
   width: 100%;
   padding: 12px 14px;
   border: 1px solid #cfd5e2;
   border-radius: 10px;
   color: #24324a;
   background: #ffffff;
+  font: inherit;
   outline: none;
 }
 
-.create-task-form__field input:focus {
+.create-task-form__field input:focus,
+.create-task-form__field select:focus {
   border-color: #6573df;
   box-shadow: 0 0 0 3px rgba(101, 115, 223, 0.15);
 }
 
-.create-task-form__field input:disabled {
+.create-task-form__field input:disabled,
+.create-task-form__field select:disabled {
   background: #f2f4f8;
 }
 
@@ -703,9 +740,14 @@ h1 {
     grid-template-columns: 1fr;
   }
 
+  .task-detail-controls,
   .task-status-field {
     align-items: flex-start;
     flex-direction: column;
+  }
+
+  .edit-task-button {
+    width: 100%;
   }
 
   .modal-backdrop {

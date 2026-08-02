@@ -1,8 +1,8 @@
 <script setup>
 import { onMounted, ref } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
-import { getCourseDetail } from '../api/courses'
-import { createTask, getCourseTasks, updateTaskStatus } from '../api/tasks'
+import { getCourseDetail, getCourses } from '../api/courses'
+import { createTask, getCourseTasks, updateTask, updateTaskStatus } from '../api/tasks'
 
 const route = useRoute()
 const router = useRouter()
@@ -29,6 +29,20 @@ const taskForm = ref({
 })
 const isCreatingTask = ref(false)
 const createTaskErrorMessage = ref('')
+
+// 编辑任务表单状态
+const isEditTaskOpen = ref(false)
+const editingTask = ref(null)
+const editTaskForm = ref({
+  title: '',
+  courseId: '',
+  deadline: '',
+  status: 'TODO',
+})
+const editableCourses = ref([])
+const isEditCoursesLoading = ref(false)
+const isUpdatingTask = ref(false)
+const editTaskErrorMessage = ref('')
 
 // 数据加载函数
 async function loadCourseDetail() {
@@ -126,6 +140,56 @@ function closeCreateTaskModal() {
   createTaskErrorMessage.value = ''
 }
 
+async function openEditTaskModal(task) {
+  editTaskErrorMessage.value = ''
+  editingTask.value = task
+  editTaskForm.value = {
+    title: task.title,
+    courseId: task.courseId,
+    deadline: task.deadline,
+    status: task.status,
+  }
+  isEditTaskOpen.value = true
+
+  if (editableCourses.value.length > 0) {
+    return
+  }
+
+  isEditCoursesLoading.value = true
+
+  try {
+    const data = await getCourses()
+    editableCourses.value = data.courses
+  } catch (error) {
+    if (error.status === 401) {
+      await router.replace({ name: 'login' })
+      return
+    }
+
+    editTaskErrorMessage.value = error.status
+      ? error.message
+      : '课程列表加载失败，请确认后端已启动后重试。'
+  } finally {
+    isEditCoursesLoading.value = false
+  }
+}
+
+function closeEditTaskModal() {
+  if (isUpdatingTask.value) {
+    return
+  }
+
+  isEditTaskOpen.value = false
+  editingTask.value = null
+  editTaskForm.value = {
+    title: '',
+    courseId: '',
+    deadline: '',
+    status: 'TODO',
+  }
+  editTaskErrorMessage.value = ''
+}
+
 // 表单提交函数
 async function handleCreateTask() {
   if (isCreatingTask.value) {
@@ -173,6 +237,68 @@ async function handleCreateTask() {
       : '任务创建失败，请确认后端已启动后重试。'
   } finally {
     isCreatingTask.value = false
+  }
+}
+
+async function handleUpdateTask() {
+  if (isUpdatingTask.value || !editingTask.value) {
+    return
+  }
+
+  const title = editTaskForm.value.title.trim()
+
+  if (!title) {
+    editTaskErrorMessage.value = '请输入任务名称。'
+    return
+  }
+
+  if (title.length > 200) {
+    editTaskErrorMessage.value = '任务名称不能超过 200 个字符。'
+    return
+  }
+
+  if (editTaskForm.value.courseId === '') {
+    editTaskErrorMessage.value = '请选择所属课程。'
+    return
+  }
+
+  if (!editTaskForm.value.deadline) {
+    editTaskErrorMessage.value = '请选择截止日期。'
+    return
+  }
+
+  if (!['TODO', 'DONE'].includes(editTaskForm.value.status)) {
+    editTaskErrorMessage.value = '请选择有效的任务状态。'
+    return
+  }
+
+  const taskId = editingTask.value.id
+  editTaskErrorMessage.value = ''
+  isUpdatingTask.value = true
+
+  try {
+    await updateTask(taskId, {
+      title,
+      courseId: Number(editTaskForm.value.courseId),
+      deadline: editTaskForm.value.deadline,
+      status: editTaskForm.value.status,
+    })
+
+    isUpdatingTask.value = false
+    closeEditTaskModal()
+    expandedTaskId.value = null
+    await Promise.all([loadCourseDetail(), loadTasks(activeStatus.value)])
+  } catch (error) {
+    if (error.status === 401) {
+      await router.replace({ name: 'login' })
+      return
+    }
+
+    editTaskErrorMessage.value = error.status
+      ? error.message
+      : '任务修改失败，请确认后端已启动后重试。'
+  } finally {
+    isUpdatingTask.value = false
   }
 }
 
@@ -303,20 +429,31 @@ onMounted(() => {
                   </div>
                 </dl>
 
-                <div class="task-status-field">
-                  <label :for="`task-status-${task.id}`">当前状态</label>
-                  <select
-                    :id="`task-status-${task.id}`"
-                    :value="task.status"
+                <div class="task-detail-controls">
+                  <div class="task-status-field">
+                    <label :for="`task-status-${task.id}`">当前状态</label>
+                    <select
+                      :id="`task-status-${task.id}`"
+                      :value="task.status"
+                      :disabled="updatingTaskId === task.id"
+                      @change="handleTaskStatusChange(task.id, $event.target.value)"
+                    >
+                      <option value="TODO">TODO</option>
+                      <option value="DONE">DONE</option>
+                    </select>
+                    <span v-if="updatingTaskId === task.id" class="task-update-status">
+                      状态更新中...
+                    </span>
+                  </div>
+
+                  <button
+                    type="button"
+                    class="edit-task-button"
                     :disabled="updatingTaskId === task.id"
-                    @change="handleTaskStatusChange(task.id, $event.target.value)"
+                    @click="openEditTaskModal(task)"
                   >
-                    <option value="TODO">TODO</option>
-                    <option value="DONE">DONE</option>
-                  </select>
-                  <span v-if="updatingTaskId === task.id" class="task-update-status">
-                    状态更新中...
-                  </span>
+                    编辑任务
+                  </button>
                 </div>
               </div>
             </li>
@@ -377,6 +514,98 @@ onMounted(() => {
             </button>
             <button type="submit" class="primary-button" :disabled="isCreatingTask">
               {{ isCreatingTask ? '保存中...' : '保存' }}
+            </button>
+          </div>
+        </form>
+      </section>
+    </div>
+
+    <div v-if="isEditTaskOpen" class="modal-backdrop">
+      <section
+        class="create-task-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="edit-task-modal-title"
+      >
+        <div class="create-task-modal__header">
+          <h2 id="edit-task-modal-title">编辑任务</h2>
+        </div>
+
+        <form class="create-task-form" @submit.prevent="handleUpdateTask">
+          <div class="create-task-form__field">
+            <label for="edit-task-title">任务名称</label>
+            <input
+              id="edit-task-title"
+              v-model="editTaskForm.title"
+              type="text"
+              maxlength="200"
+              autocomplete="off"
+              :disabled="isEditCoursesLoading || isUpdatingTask"
+            />
+          </div>
+
+          <div class="create-task-form__field">
+            <label for="edit-task-course">所属课程</label>
+            <select
+              id="edit-task-course"
+              v-model="editTaskForm.courseId"
+              :disabled="isEditCoursesLoading || isUpdatingTask"
+            >
+              <option
+                v-for="courseOption in editableCourses"
+                :key="courseOption.id"
+                :value="courseOption.id"
+              >
+                {{ courseOption.name }}
+              </option>
+            </select>
+          </div>
+
+          <p v-if="isEditCoursesLoading" class="status-text">正在加载课程列表...</p>
+
+          <div class="create-task-form__field">
+            <label for="edit-task-deadline">截止日期</label>
+            <input
+              id="edit-task-deadline"
+              v-model="editTaskForm.deadline"
+              type="date"
+              :disabled="isEditCoursesLoading || isUpdatingTask"
+            />
+          </div>
+
+          <div class="create-task-form__field">
+            <label for="edit-task-status">状态</label>
+            <select
+              id="edit-task-status"
+              v-model="editTaskForm.status"
+              :disabled="isEditCoursesLoading || isUpdatingTask"
+            >
+              <option value="TODO">TODO</option>
+              <option value="DONE">DONE</option>
+            </select>
+          </div>
+
+          <p v-if="editTaskErrorMessage" class="error-message">
+            {{ editTaskErrorMessage }}
+          </p>
+
+          <div class="create-task-modal__actions">
+            <button
+              type="button"
+              class="secondary-button"
+              :disabled="isUpdatingTask"
+              @click="closeEditTaskModal"
+            >
+              取消
+            </button>
+            <button
+              type="submit"
+              class="primary-button"
+              :disabled="
+                isEditCoursesLoading || isUpdatingTask || editableCourses.length === 0
+              "
+            >
+              {{ isUpdatingTask ? '保存中...' : '保存' }}
             </button>
           </div>
         </form>
