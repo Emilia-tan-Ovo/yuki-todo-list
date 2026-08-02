@@ -2,20 +2,32 @@
 import { onMounted, ref } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { getCourseDetail } from '../api/courses'
-import { getCourseTasks } from '../api/tasks'
+import { createTask, getCourseTasks } from '../api/tasks'
 
 const route = useRoute()
 const router = useRouter()
 
+// 课程详情状态
 const course = ref(null)
 const isLoading = ref(true)
 const errorMessage = ref('')
 
+// 任务列表状态
 const tasks = ref([])
 const activeStatus = ref('TODO')
 const isTasksLoading = ref(true)
 const tasksErrorMessage = ref('')
 
+// 新建任务表单状态
+const isCreateTaskOpen = ref(false)
+const taskForm = ref({
+  title: '',
+  deadline: '',
+})
+const isCreatingTask = ref(false)
+const createTaskErrorMessage = ref('')
+
+// 数据加载函数
 async function loadCourseDetail() {
   try {
     course.value = await getCourseDetail(route.params.courseId)
@@ -33,7 +45,6 @@ async function loadCourseDetail() {
   }
 }
 
-// 首次进入和标签切换共用同一条任务加载流程。
 async function loadTasks(status) {
   activeStatus.value = status
   tasksErrorMessage.value = ''
@@ -53,6 +64,75 @@ async function loadTasks(status) {
       : '任务列表加载失败，请确认后端已启动后重试。'
   } finally {
     isTasksLoading.value = false
+  }
+}
+
+// 弹窗操作函数
+function openCreateTaskModal() {
+  createTaskErrorMessage.value = ''
+  isCreateTaskOpen.value = true
+}
+
+function closeCreateTaskModal() {
+  if (isCreatingTask.value) {
+    return
+  }
+
+  isCreateTaskOpen.value = false
+  taskForm.value = {
+    title: '',
+    deadline: '',
+  }
+  createTaskErrorMessage.value = ''
+}
+
+// 表单提交函数
+async function handleCreateTask() {
+  if (isCreatingTask.value) {
+    return
+  }
+
+  const title = taskForm.value.title.trim()
+
+  if (!title) {
+    createTaskErrorMessage.value = '请输入任务名称。'
+    return
+  }
+
+  if (title.length > 200) {
+    createTaskErrorMessage.value = '任务名称不能超过 200 个字符。'
+    return
+  }
+
+  if (!taskForm.value.deadline) {
+    createTaskErrorMessage.value = '请选择截止日期。'
+    return
+  }
+
+  createTaskErrorMessage.value = ''
+  isCreatingTask.value = true
+
+  try {
+    await createTask({
+      title,
+      courseId: Number(route.params.courseId),
+      deadline: taskForm.value.deadline,
+    })
+
+    isCreatingTask.value = false
+    closeCreateTaskModal()
+    await Promise.all([loadCourseDetail(), loadTasks('TODO')])
+  } catch (error) {
+    if (error.status === 401) {
+      await router.replace({ name: 'login' })
+      return
+    }
+
+    createTaskErrorMessage.value = error.status
+      ? error.message
+      : '任务创建失败，请确认后端已启动后重试。'
+  } finally {
+    isCreatingTask.value = false
   }
 }
 
@@ -85,11 +165,16 @@ onMounted(() => {
         :style="{ '--course-color': course.color }"
       >
         <div class="course-detail-heading">
-          <span class="course-color-dot" aria-hidden="true"></span>
-          <div>
-            <p class="eyebrow">课程详情</p>
-            <h1>{{ course.name }}</h1>
+          <div class="course-detail-title">
+            <span class="course-color-dot" aria-hidden="true"></span>
+            <div>
+              <p class="eyebrow">课程详情</p>
+              <h1>{{ course.name }}</h1>
+            </div>
           </div>
+          <button type="button" class="create-task-button" @click="openCreateTaskModal">
+            新建任务
+          </button>
         </div>
 
         <div class="course-detail-stats">
@@ -144,5 +229,63 @@ onMounted(() => {
         </div>
       </section>
     </main>
+
+    <div v-if="isCreateTaskOpen" class="modal-backdrop">
+      <section
+        class="create-task-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="create-task-modal-title"
+      >
+        <div class="create-task-modal__header">
+          <div>
+            <h2 id="create-task-modal-title">新建任务</h2>
+            <p class="create-task-modal__course">所属课程：{{ course.name }}</p>
+          </div>
+        </div>
+
+        <form class="create-task-form" @submit.prevent="handleCreateTask">
+          <div class="create-task-form__field">
+            <label for="create-task-title">任务名称</label>
+            <input
+              id="create-task-title"
+              v-model="taskForm.title"
+              type="text"
+              maxlength="200"
+              autocomplete="off"
+              :disabled="isCreatingTask"
+            />
+          </div>
+
+          <div class="create-task-form__field">
+            <label for="create-task-deadline">截止日期</label>
+            <input
+              id="create-task-deadline"
+              v-model="taskForm.deadline"
+              type="date"
+              :disabled="isCreatingTask"
+            />
+          </div>
+
+          <p v-if="createTaskErrorMessage" class="error-message">
+            {{ createTaskErrorMessage }}
+          </p>
+
+          <div class="create-task-modal__actions">
+            <button
+              type="button"
+              class="secondary-button"
+              :disabled="isCreatingTask"
+              @click="closeCreateTaskModal"
+            >
+              取消
+            </button>
+            <button type="submit" class="primary-button" :disabled="isCreatingTask">
+              {{ isCreatingTask ? '保存中...' : '保存' }}
+            </button>
+          </div>
+        </form>
+      </section>
+    </div>
   </div>
 </template>
