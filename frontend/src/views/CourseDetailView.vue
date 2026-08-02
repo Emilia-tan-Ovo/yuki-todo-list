@@ -1,7 +1,7 @@
 <script setup>
 import { onMounted, ref } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
-import { getCourseDetail, getCourses, updateCourse } from '../api/courses'
+import { deleteCourse, getCourseDetail, getCourses, updateCourse } from '../api/courses'
 import {
   createTask,
   deleteTask,
@@ -26,6 +26,11 @@ const editCourseForm = ref({
 })
 const isUpdatingCourse = ref(false)
 const editCourseErrorMessage = ref('')
+
+// 删除课程确认状态
+const isDeleteCourseOpen = ref(false)
+const isDeletingCourse = ref(false)
+const deleteCourseErrorMessage = ref('')
 
 // 任务列表状态
 const tasks = ref([])
@@ -169,6 +174,20 @@ function closeEditCourseModal() {
   editCourseErrorMessage.value = ''
 }
 
+function openDeleteCourseModal() {
+  deleteCourseErrorMessage.value = ''
+  isDeleteCourseOpen.value = true
+}
+
+function closeDeleteCourseModal() {
+  if (isDeletingCourse.value) {
+    return
+  }
+
+  isDeleteCourseOpen.value = false
+  deleteCourseErrorMessage.value = ''
+}
+
 function openCreateTaskModal() {
   createTaskErrorMessage.value = ''
   isCreateTaskOpen.value = true
@@ -300,6 +319,33 @@ async function handleUpdateCourse() {
       : '课程修改失败，请确认后端已启动后重试。'
   } finally {
     isUpdatingCourse.value = false
+  }
+}
+
+async function handleDeleteCourse() {
+  if (isDeletingCourse.value) {
+    return
+  }
+
+  deleteCourseErrorMessage.value = ''
+  isDeletingCourse.value = true
+
+  try {
+    await deleteCourse(Number(route.params.courseId))
+    isDeletingCourse.value = false
+    closeDeleteCourseModal()
+    await router.replace({ name: 'home' })
+  } catch (error) {
+    if (error.status === 401) {
+      await router.replace({ name: 'login' })
+      return
+    }
+
+    deleteCourseErrorMessage.value = error.status
+      ? error.message
+      : '课程删除失败，请确认后端已启动后重试。'
+  } finally {
+    isDeletingCourse.value = false
   }
 }
 
@@ -486,6 +532,13 @@ onMounted(() => {
             <button type="button" class="create-task-button" @click="openCreateTaskModal">
               新建任务
             </button>
+            <button
+              type="button"
+              class="danger-button delete-course-button"
+              @click="openDeleteCourseModal"
+            >
+              删除课程
+            </button>
           </div>
         </div>
 
@@ -617,6 +670,49 @@ onMounted(() => {
         </div>
       </section>
     </main>
+
+    <div v-if="isDeleteCourseOpen" class="modal-backdrop">
+      <section
+        class="create-task-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="delete-course-modal-title"
+      >
+        <div class="create-task-modal__header">
+          <h2 id="delete-course-modal-title">删除课程</h2>
+        </div>
+
+        <p class="delete-confirmation-text">
+          确定要删除课程“<strong>{{ course.name }}</strong>”吗？
+        </p>
+        <p class="delete-course-warning">
+          删除课程会同时永久删除课程下的全部任务，无法恢复。
+        </p>
+
+        <p v-if="deleteCourseErrorMessage" class="error-message" role="alert">
+          {{ deleteCourseErrorMessage }}
+        </p>
+
+        <div class="create-task-modal__actions">
+          <button
+            type="button"
+            class="secondary-button"
+            :disabled="isDeletingCourse"
+            @click="closeDeleteCourseModal"
+          >
+            取消
+          </button>
+          <button
+            type="button"
+            class="danger-button"
+            :disabled="isDeletingCourse"
+            @click="handleDeleteCourse"
+          >
+            {{ isDeletingCourse ? '删除中...' : '确认删除课程' }}
+          </button>
+        </div>
+      </section>
+    </div>
 
     <div v-if="isEditCourseOpen" class="modal-backdrop">
       <section

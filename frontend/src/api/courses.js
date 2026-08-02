@@ -27,3 +27,9 @@ export function updateCourse(courseId, courseData) {
     body: JSON.stringify(courseData),
   })
 }
+
+export function deleteCourse(courseId) {
+  return requestJson(`/api/courses/${courseId}`, {
+    method: 'DELETE',
+  })
+}
