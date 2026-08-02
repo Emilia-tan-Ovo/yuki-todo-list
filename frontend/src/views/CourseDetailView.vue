@@ -1,7 +1,7 @@
 <script setup>
 import { onMounted, ref } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
-import { getCourseDetail, getCourses } from '../api/courses'
+import { getCourseDetail, getCourses, updateCourse } from '../api/courses'
 import {
   createTask,
   deleteTask,
@@ -17,6 +17,15 @@ const router = useRouter()
 const course = ref(null)
 const isLoading = ref(true)
 const errorMessage = ref('')
+
+// 编辑课程表单状态
+const isEditCourseOpen = ref(false)
+const editCourseForm = ref({
+  name: '',
+  color: '#5967d8',
+})
+const isUpdatingCourse = ref(false)
+const editCourseErrorMessage = ref('')
 
 // 任务列表状态
 const tasks = ref([])
@@ -134,6 +143,32 @@ async function handleTaskStatusChange(taskId, newStatus) {
 }
 
 // 弹窗操作函数
+function openEditCourseModal() {
+  if (!course.value) {
+    return
+  }
+
+  editCourseErrorMessage.value = ''
+  editCourseForm.value = {
+    name: course.value.name,
+    color: course.value.color,
+  }
+  isEditCourseOpen.value = true
+}
+
+function closeEditCourseModal() {
+  if (isUpdatingCourse.value) {
+    return
+  }
+
+  isEditCourseOpen.value = false
+  editCourseForm.value = {
+    name: '',
+    color: '#5967d8',
+  }
+  editCourseErrorMessage.value = ''
+}
+
 function openCreateTaskModal() {
   createTaskErrorMessage.value = ''
   isCreateTaskOpen.value = true
@@ -219,6 +254,55 @@ function closeDeleteTaskModal() {
 }
 
 // 表单提交函数
+async function handleUpdateCourse() {
+  if (isUpdatingCourse.value) {
+    return
+  }
+
+  const name = editCourseForm.value.name.trim()
+  const color = editCourseForm.value.color.toUpperCase()
+
+  if (!name) {
+    editCourseErrorMessage.value = '请输入课程名称。'
+    return
+  }
+
+  if (name.length > 100) {
+    editCourseErrorMessage.value = '课程名称不能超过 100 个字符。'
+    return
+  }
+
+  if (!/^#[0-9A-F]{6}$/.test(color)) {
+    editCourseErrorMessage.value = '课程颜色必须使用 #RRGGBB 格式。'
+    return
+  }
+
+  editCourseErrorMessage.value = ''
+  isUpdatingCourse.value = true
+
+  try {
+    await updateCourse(Number(route.params.courseId), {
+      name,
+      color,
+    })
+
+    isUpdatingCourse.value = false
+    closeEditCourseModal()
+    await Promise.all([loadCourseDetail(), loadTasks(activeStatus.value)])
+  } catch (error) {
+    if (error.status === 401) {
+      await router.replace({ name: 'login' })
+      return
+    }
+
+    editCourseErrorMessage.value = error.status
+      ? error.message
+      : '课程修改失败，请确认后端已启动后重试。'
+  } finally {
+    isUpdatingCourse.value = false
+  }
+}
+
 async function handleCreateTask() {
   if (isCreatingTask.value) {
     return
@@ -395,9 +479,14 @@ onMounted(() => {
               <h1>{{ course.name }}</h1>
             </div>
           </div>
-          <button type="button" class="create-task-button" @click="openCreateTaskModal">
-            新建任务
-          </button>
+          <div class="course-detail-actions">
+            <button type="button" class="secondary-button" @click="openEditCourseModal">
+              编辑课程
+            </button>
+            <button type="button" class="create-task-button" @click="openCreateTaskModal">
+              新建任务
+            </button>
+          </div>
         </div>
 
         <div class="course-detail-stats">
@@ -528,6 +617,64 @@ onMounted(() => {
         </div>
       </section>
     </main>
+
+    <div v-if="isEditCourseOpen" class="modal-backdrop">
+      <section
+        class="create-task-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="edit-course-modal-title"
+      >
+        <div class="create-task-modal__header">
+          <h2 id="edit-course-modal-title">编辑课程</h2>
+        </div>
+
+        <form class="create-task-form" @submit.prevent="handleUpdateCourse">
+          <div class="create-task-form__field">
+            <label for="edit-course-name">课程名称</label>
+            <input
+              id="edit-course-name"
+              v-model="editCourseForm.name"
+              type="text"
+              maxlength="100"
+              autocomplete="off"
+              :disabled="isUpdatingCourse"
+            />
+          </div>
+
+          <div class="create-task-form__field course-color-picker">
+            <label for="edit-course-color">课程颜色</label>
+            <div>
+              <input
+                id="edit-course-color"
+                v-model="editCourseForm.color"
+                type="color"
+                :disabled="isUpdatingCourse"
+              />
+              <span>{{ editCourseForm.color }}</span>
+            </div>
+          </div>
+
+          <p v-if="editCourseErrorMessage" class="error-message" role="alert">
+            {{ editCourseErrorMessage }}
+          </p>
+
+          <div class="create-task-modal__actions">
+            <button
+              type="button"
+              class="secondary-button"
+              :disabled="isUpdatingCourse"
+              @click="closeEditCourseModal"
+            >
+              取消
+            </button>
+            <button type="submit" class="primary-button" :disabled="isUpdatingCourse">
+              {{ isUpdatingCourse ? '保存中...' : '保存' }}
+            </button>
+          </div>
+        </form>
+      </section>
+    </div>
 
     <div v-if="isCreateTaskOpen" class="modal-backdrop">
       <section

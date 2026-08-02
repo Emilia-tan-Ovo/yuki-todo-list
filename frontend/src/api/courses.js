@@ -17,3 +17,13 @@ export function createCourse(courseData) {
     body: JSON.stringify(courseData),
   })
 }
+
+export function updateCourse(courseId, courseData) {
+  return requestJson(`/api/courses/${courseId}`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(courseData),
+  })
+}
