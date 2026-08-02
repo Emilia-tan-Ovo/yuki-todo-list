@@ -689,6 +689,10 @@ h1 {
   margin-bottom: 28px;
 }
 
+.create-course-button {
+  flex: 0 0 auto;
+}
+
 .page-message {
   max-width: 720px;
 }
@@ -719,6 +723,49 @@ h1 {
 
 .empty-state p {
   margin: 10px 0 0;
+}
+
+.empty-state__action {
+  margin-top: 22px;
+}
+
+.course-color-toggle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #364158;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.course-color-toggle input {
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  accent-color: #5967d8;
+}
+
+.course-color-toggle--disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+
+.course-color-picker > div {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.create-task-form__field.course-color-picker input[type='color'] {
+  width: 64px;
+  height: 44px;
+  padding: 4px;
+  cursor: pointer;
+}
+
+.course-color-picker span {
+  color: #68738a;
+  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
 }
 
 .courses-grid {
@@ -761,6 +808,15 @@ h1 {
 
   .course-detail-card {
     padding: 28px 22px;
+  }
+
+  .page-heading {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .create-course-button {
+    width: 100%;
   }
 
   .course-detail-heading {
