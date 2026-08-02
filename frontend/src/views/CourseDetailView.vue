@@ -2,7 +2,13 @@
 import { onMounted, ref } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { getCourseDetail, getCourses } from '../api/courses'
-import { createTask, getCourseTasks, updateTask, updateTaskStatus } from '../api/tasks'
+import {
+  createTask,
+  deleteTask,
+  getCourseTasks,
+  updateTask,
+  updateTaskStatus,
+} from '../api/tasks'
 
 const route = useRoute()
 const router = useRouter()
@@ -43,6 +49,12 @@ const editableCourses = ref([])
 const isEditCoursesLoading = ref(false)
 const isUpdatingTask = ref(false)
 const editTaskErrorMessage = ref('')
+
+// 删除任务确认状态
+const isDeleteTaskOpen = ref(false)
+const deletingTask = ref(null)
+const isDeletingTask = ref(false)
+const deleteTaskErrorMessage = ref('')
 
 // 数据加载函数
 async function loadCourseDetail() {
@@ -190,6 +202,22 @@ function closeEditTaskModal() {
   editTaskErrorMessage.value = ''
 }
 
+function openDeleteTaskModal(task) {
+  deleteTaskErrorMessage.value = ''
+  deletingTask.value = task
+  isDeleteTaskOpen.value = true
+}
+
+function closeDeleteTaskModal() {
+  if (isDeletingTask.value) {
+    return
+  }
+
+  isDeleteTaskOpen.value = false
+  deletingTask.value = null
+  deleteTaskErrorMessage.value = ''
+}
+
 // 表单提交函数
 async function handleCreateTask() {
   if (isCreatingTask.value) {
@@ -299,6 +327,35 @@ async function handleUpdateTask() {
       : '任务修改失败，请确认后端已启动后重试。'
   } finally {
     isUpdatingTask.value = false
+  }
+}
+
+async function handleDeleteTask() {
+  if (isDeletingTask.value || !deletingTask.value) {
+    return
+  }
+
+  const taskId = deletingTask.value.id
+  deleteTaskErrorMessage.value = ''
+  isDeletingTask.value = true
+
+  try {
+    await deleteTask(taskId)
+    isDeletingTask.value = false
+    closeDeleteTaskModal()
+    expandedTaskId.value = null
+    await Promise.all([loadCourseDetail(), loadTasks(activeStatus.value)])
+  } catch (error) {
+    if (error.status === 401) {
+      await router.replace({ name: 'login' })
+      return
+    }
+
+    deleteTaskErrorMessage.value = error.status
+      ? error.message
+      : '任务删除失败，请确认后端已启动后重试。'
+  } finally {
+    isDeletingTask.value = false
   }
 }
 
@@ -446,14 +503,24 @@ onMounted(() => {
                     </span>
                   </div>
 
-                  <button
-                    type="button"
-                    class="edit-task-button"
-                    :disabled="updatingTaskId === task.id"
-                    @click="openEditTaskModal(task)"
-                  >
-                    编辑任务
-                  </button>
+                  <div class="task-action-buttons">
+                    <button
+                      type="button"
+                      class="edit-task-button"
+                      :disabled="updatingTaskId === task.id"
+                      @click="openEditTaskModal(task)"
+                    >
+                      编辑任务
+                    </button>
+                    <button
+                      type="button"
+                      class="delete-task-button"
+                      :disabled="updatingTaskId === task.id"
+                      @click="openDeleteTaskModal(task)"
+                    >
+                      删除任务
+                    </button>
+                  </div>
                 </div>
               </div>
             </li>
@@ -609,6 +676,46 @@ onMounted(() => {
             </button>
           </div>
         </form>
+      </section>
+    </div>
+
+    <div v-if="isDeleteTaskOpen" class="modal-backdrop">
+      <section
+        class="create-task-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="delete-task-modal-title"
+      >
+        <div class="create-task-modal__header">
+          <h2 id="delete-task-modal-title">删除任务</h2>
+        </div>
+
+        <p class="delete-confirmation-text">
+          确定要删除任务“<strong>{{ deletingTask.title }}</strong>”吗？删除后无法恢复。
+        </p>
+
+        <p v-if="deleteTaskErrorMessage" class="error-message">
+          {{ deleteTaskErrorMessage }}
+        </p>
+
+        <div class="create-task-modal__actions">
+          <button
+            type="button"
+            class="secondary-button"
+            :disabled="isDeletingTask"
+            @click="closeDeleteTaskModal"
+          >
+            取消
+          </button>
+          <button
+            type="button"
+            class="danger-button"
+            :disabled="isDeletingTask"
+            @click="handleDeleteTask"
+          >
+            {{ isDeletingTask ? '删除中...' : '确认删除' }}
+          </button>
+        </div>
       </section>
     </div>
   </div>

@@ -33,3 +33,9 @@ export function updateTask(taskId, taskData) {
     body: JSON.stringify(taskData),
   })
 }
+
+export function deleteTask(taskId) {
+  return requestJson(`/api/tasks/${taskId}`, {
+    method: 'DELETE',
+  })
+}

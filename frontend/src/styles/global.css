@@ -541,6 +541,39 @@ h1 {
   opacity: 0.7;
 }
 
+.task-action-buttons {
+  display: flex;
+  gap: 10px;
+}
+
+.delete-task-button {
+  flex: 0 0 auto;
+  padding: 9px 14px;
+  border: 1px solid #e1b7b7;
+  border-radius: 9px;
+  color: #a43b3b;
+  background: #fffafa;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.delete-task-button:hover:not(:disabled) {
+  border-color: #cc8f8f;
+  background: #fff1f1;
+}
+
+.delete-task-button:focus-visible,
+.danger-button:focus-visible {
+  outline: 3px solid rgba(181, 64, 64, 0.25);
+  outline-offset: 2px;
+}
+
+.delete-task-button:disabled,
+.danger-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+
 .modal-backdrop {
   position: fixed;
   z-index: 100;
@@ -627,6 +660,25 @@ h1 {
 .secondary-button:hover:not(:disabled) {
   border-color: #aeb6c7;
   background: #f7f8fc;
+}
+
+.delete-confirmation-text {
+  margin: 22px 0 0;
+  color: #4d586d;
+  line-height: 1.7;
+}
+
+.danger-button {
+  padding: 11px 16px;
+  border-radius: 10px;
+  color: #ffffff;
+  background: #b54040;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.danger-button:hover:not(:disabled) {
+  background: #9f3434;
 }
 
 .page-heading {
@@ -747,6 +799,12 @@ h1 {
   }
 
   .edit-task-button {
+    width: 100%;
+  }
+
+  .task-action-buttons {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     width: 100%;
   }
 
