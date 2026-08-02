@@ -280,6 +280,92 @@ h1 {
   font-size: 1.65rem;
 }
 
+.course-tasks-section {
+  margin-top: 34px;
+  padding-top: 28px;
+  border-top: 1px solid #e7eaf2;
+}
+
+.task-status-tabs {
+  display: flex;
+  gap: 10px;
+}
+
+.task-status-tabs button {
+  padding: 10px 16px;
+  border: 1px solid #d8ddea;
+  border-radius: 10px;
+  color: #59647a;
+  background: #ffffff;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.task-status-tabs button:hover:not(:disabled) {
+  border-color: #aeb7d8;
+  background: #f5f6fc;
+}
+
+.task-status-tabs button:focus-visible {
+  outline: 3px solid rgba(89, 103, 216, 0.3);
+  outline-offset: 3px;
+}
+
+.task-status-tabs button:disabled {
+  cursor: wait;
+  opacity: 0.72;
+}
+
+.task-status-tabs .task-status-tab--active {
+  border-color: #5967d8;
+  color: #ffffff;
+  background: #5967d8;
+}
+
+.task-list-state {
+  margin: 22px 0 0;
+  padding: 24px;
+  border-radius: 12px;
+  color: #68738a;
+  background: #f8f9fc;
+  text-align: center;
+}
+
+.course-task-list {
+  display: grid;
+  gap: 0;
+  margin: 22px 0 0;
+  padding: 0;
+  border: 1px solid #e7eaf2;
+  border-radius: 14px;
+  list-style: none;
+}
+
+.course-task-list li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 18px 20px;
+}
+
+.course-task-list li + li {
+  border-top: 1px solid #e7eaf2;
+}
+
+.course-task-list span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  color: #354057;
+  font-weight: 600;
+}
+
+.course-task-list time {
+  flex: 0 0 auto;
+  color: #7a8498;
+  font-size: 0.9rem;
+}
+
 .page-heading {
   display: flex;
   align-items: flex-end;
@@ -364,6 +450,17 @@ h1 {
 
   .course-detail-stats {
     grid-template-columns: 1fr;
+  }
+
+  .task-status-tabs {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .course-task-list li {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 8px;
   }
 
   .courses-grid {
