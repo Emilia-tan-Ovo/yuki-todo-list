@@ -12,6 +12,7 @@ const isLoading = ref(true)
 const errorMessage = ref('')
 const logoutErrorMessage = ref('')
 const isLoggingOut = ref(false)
+const isLogoutConfirmOpen = ref(false)
 const courses = ref([])
 const isCoursesLoading = ref(true)
 const coursesErrorMessage = ref('')
@@ -89,6 +90,20 @@ function closeCreateCourseModal() {
   createCourseErrorMessage.value = ''
 }
 
+function openLogoutConfirmModal() {
+  logoutErrorMessage.value = ''
+  isLogoutConfirmOpen.value = true
+}
+
+function closeLogoutConfirmModal() {
+  if (isLoggingOut.value) {
+    return
+  }
+
+  isLogoutConfirmOpen.value = false
+  logoutErrorMessage.value = ''
+}
+
 async function handleCreateCourse() {
   if (isCreatingCourse.value) {
     return
@@ -135,11 +150,16 @@ async function handleCreateCourse() {
 }
 
 async function handleLogout() {
+  if (isLoggingOut.value) {
+    return
+  }
+
   logoutErrorMessage.value = ''
   isLoggingOut.value = true
 
   try {
     await logout()
+    isLogoutConfirmOpen.value = false
     await router.replace({ name: 'login' })
   } catch (error) {
     logoutErrorMessage.value = error.status
@@ -162,10 +182,9 @@ async function handleLogout() {
           <button
             class="logout-button"
             type="button"
-            :disabled="isLoggingOut"
-            @click="handleLogout"
+            @click="openLogoutConfirmModal"
           >
-            {{ isLoggingOut ? '退出中...' : '退出登录' }}
+            退出登录
           </button>
         </div>
       </div>
@@ -179,15 +198,6 @@ async function handleLogout() {
       </p>
 
       <template v-else-if="currentUser">
-        <p
-          v-if="logoutErrorMessage"
-          class="error-message page-message"
-          role="alert"
-          aria-live="polite"
-        >
-          {{ logoutErrorMessage }}
-        </p>
-
         <section aria-labelledby="courses-title">
           <div class="page-heading">
             <div>
@@ -228,6 +238,44 @@ async function handleLogout() {
         </section>
       </template>
     </main>
+
+    <div v-if="isLogoutConfirmOpen" class="modal-backdrop">
+      <section
+        class="create-task-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="logout-confirm-modal-title"
+      >
+        <div class="create-task-modal__header">
+          <h2 id="logout-confirm-modal-title">退出登录</h2>
+        </div>
+
+        <p class="delete-confirmation-text">确定要退出当前账号吗？</p>
+
+        <p v-if="logoutErrorMessage" class="error-message" role="alert">
+          {{ logoutErrorMessage }}
+        </p>
+
+        <div class="create-task-modal__actions">
+          <button
+            type="button"
+            class="secondary-button"
+            :disabled="isLoggingOut"
+            @click="closeLogoutConfirmModal"
+          >
+            取消
+          </button>
+          <button
+            type="button"
+            class="primary-button"
+            :disabled="isLoggingOut"
+            @click="handleLogout"
+          >
+            {{ isLoggingOut ? '退出中...' : '确认退出' }}
+          </button>
+        </div>
+      </section>
+    </div>
 
     <div v-if="isCreateCourseOpen" class="modal-backdrop">
       <section
